@@ -1,0 +1,1295 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Nadia boutique en ligne</title>
+<meta name="theme-color" content="#1F2D50">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Nadia">
+<link rel="manifest" href="data:application/manifest+json;base64,eyJuYW1lIjogIk5hZGlhIGJvdXRpcXVlIGVuIGxpZ25lIiwgInNob3J0X25hbWUiOiAiTmFkaWEiLCAiZGVzY3JpcHRpb24iOiAiQm91dGlxdWUgZXQgZ2VzdGlvbiBkZSB2ZW50ZSB0ZXJyYWluIiwgInN0YXJ0X3VybCI6ICIuIiwgImRpc3BsYXkiOiAic3RhbmRhbG9uZSIsICJiYWNrZ3JvdW5kX2NvbG9yIjogIiNFRkVCRTMiLCAidGhlbWVfY29sb3IiOiAiIzFGMkQ1MCIsICJpY29ucyI6IFt7InNyYyI6ICJkYXRhOmltYWdlL3N2Zyt4bWw7YmFzZTY0LFBITjJaeUI0Yld4dWN6MGlhSFIwY0RvdkwzZDNkeTUzTXk1dmNtY3ZNakF3TUM5emRtY2lJSFpwWlhkQ2IzZzlJakFnTUNBMU1USWdOVEV5SWo0S1BISmxZM1FnZDJsa2RHZzlJalV4TWlJZ2FHVnBaMmgwUFNJMU1USWlJSEo0UFNJNU5pSWdabWxzYkQwaUl6RkdNa1ExTUNJdlBnbzhkR1Y0ZENCNFBTSTFNQ1VpSUhrOUlqWXlKU0lnWm05dWRDMW1ZVzFwYkhrOUlrZGxiM0puYVdFc0lITmxjbWxtSWlCbWIyNTBMWE5wZW1VOUlqTXdNQ0lnWm05dWRDMTNaV2xuYUhROUlqY3dNQ0lnWm1sc2JEMGlJMFE1UVRRME1TSWdkR1Y0ZEMxaGJtTm9iM0k5SW0xcFpHUnNaU0krVGp3dmRHVjRkRDRLUEM5emRtYysiLCAic2l6ZXMiOiAiNTEyeDUxMiIsICJ0eXBlIjogImltYWdlL3N2Zyt4bWwiLCAicHVycG9zZSI6ICJhbnkgbWFza2FibGUifV19">
+<link rel="apple-touch-icon" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA1MTIgNTEyIj4KPHJlY3Qgd2lkdGg9IjUxMiIgaGVpZ2h0PSI1MTIiIHJ4PSI5NiIgZmlsbD0iIzFGMkQ1MCIvPgo8dGV4dCB4PSI1MCUiIHk9IjYyJSIgZm9udC1mYW1pbHk9Ikdlb3JnaWEsIHNlcmlmIiBmb250LXNpemU9IjMwMCIgZm9udC13ZWlnaHQ9IjcwMCIgZmlsbD0iI0Q5QTQ0MSIgdGV4dC1hbmNob3I9Im1pZGRsZSI+TjwvdGV4dD4KPC9zdmc+">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --indigo: #1F2D50;
+    --indigo-light: #33456f;
+    --ochre: #D9A441;
+    --clay: #B5482B;
+    --stone: #EFEBE3;
+    --ink: #20201C;
+    --card-bg: #FFFFFF;
+    --border: rgba(32,32,28,0.12);
+    --muted: #6b6558;
+    --bg: var(--stone);
+    --fg: var(--ink);
+    --success: #3F7D58;
+    --danger: #B5482B;
+    --radius-card: 14px;
+    --radius-pill: 999px;
+    --font-display: 'Fraunces', serif;
+    --font-body: 'IBM Plex Sans', sans-serif;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg: #16151A; --fg: #EFEBE3; --card-bg: #201F26;
+      --border: rgba(239,235,227,0.14); --muted: #a39d8d; --stone: #201F26;
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg: #16151A; --fg: #EFEBE3; --card-bg: #201F26;
+    --border: rgba(239,235,227,0.14); --muted: #a39d8d; --stone: #201F26;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{background:var(--bg); color:var(--fg); font-family:var(--font-body); min-height:100vh; -webkit-font-smoothing:antialiased;}
+  h1,h2,h3{font-family:var(--font-display); margin:0; font-weight:600;}
+  button{font-family:var(--font-body); cursor:pointer;}
+  input,select,textarea{font-family:var(--font-body);}
+  a{color:inherit;}
+
+  .topbar{display:flex; align-items:center; justify-content:space-between; padding:18px 28px; border-bottom:1px solid var(--border); background:var(--indigo); color:#fff; flex-wrap:wrap; gap:12px;}
+  .brand{display:flex; align-items:baseline; gap:10px;}
+  .brand h1{font-size:22px; letter-spacing:0.2px;}
+  .brand span{font-size:13px; color:var(--ochre); font-family:var(--font-body); font-weight:500;}
+  .nav-toggle{display:flex; background:rgba(255,255,255,0.12); border-radius:var(--radius-pill); padding:4px; gap:2px;}
+  .nav-toggle button{border:none; background:transparent; color:#fff; padding:9px 18px; border-radius:var(--radius-pill); font-size:14px; font-weight:500; opacity:0.75; transition:background .18s,opacity .18s;}
+  .nav-toggle button.active{background:var(--ochre); color:var(--indigo); opacity:1; font-weight:600;}
+
+  .wrap{max-width:1180px; margin:0 auto; padding:28px;}
+  .hidden{display:none !important;}
+
+  .market-hero{display:flex; justify-content:space-between; align-items:flex-end; gap:16px; margin-bottom:24px; flex-wrap:wrap;}
+  .market-hero p{color:var(--muted); max-width:52ch; margin:6px 0 0;}
+  .market-grid{display:grid; grid-template-columns:repeat(auto-fill,minmax(230px,1fr)); gap:20px;}
+  .product-card{background:var(--card-bg); border:1px solid var(--border); border-radius:var(--radius-card); overflow:hidden; display:flex; flex-direction:column;}
+  .product-photo{position:relative; width:100%; aspect-ratio:1/1; background:var(--stone); display:flex; align-items:center; justify-content:center; overflow:hidden; color:var(--muted); font-size:13px;}
+  .product-photo img{width:100%; height:100%; object-fit:cover;}
+  .photo-nav{position:absolute; top:50%; transform:translateY(-50%); width:26px; height:26px; border-radius:50%; border:none; background:rgba(0,0,0,0.45); color:#fff; font-size:14px; line-height:1; display:flex; align-items:center; justify-content:center;}
+  .photo-nav.prev{left:6px;} .photo-nav.next{right:6px;}
+  .product-body{padding:14px 16px 16px; display:flex; flex-direction:column; gap:6px; flex:1;}
+  .product-body h3{font-size:16px; line-height:1.3;}
+  .delivery-note{font-size:12px; color:var(--muted);}
+  .stock-note{font-size:12px; color:var(--clay); font-weight:600;}
+  .price-row{display:flex; align-items:baseline; justify-content:space-between; margin-top:auto;}
+  .price{font-family:var(--font-display); font-size:20px; font-weight:700; color:var(--clay);}
+  .buy-btn{margin-top:8px; background:var(--indigo); color:#fff; border:none; border-radius:var(--radius-pill); padding:10px; font-size:14px; font-weight:600;}
+  .buy-btn:hover{background:var(--indigo-light);}
+  .empty-state{padding:60px 20px; text-align:center; color:var(--muted); border:1px dashed var(--border); border-radius:var(--radius-card);}
+
+  .admin-shell{display:flex; gap:24px; align-items:flex-start;}
+  .admin-side{width:190px; flex-shrink:0; display:flex; flex-direction:column; gap:4px; position:sticky; top:20px;}
+  .admin-side button{text-align:left; border:none; background:transparent; padding:10px 14px; border-radius:10px; color:var(--fg); font-size:14px; font-weight:500; opacity:0.7;}
+  .admin-side button.active{background:var(--card-bg); border:1px solid var(--border); opacity:1; font-weight:600; color:var(--clay);}
+  .admin-main{flex:1; min-width:0;}
+
+  .panel{background:var(--card-bg); border:1px solid var(--border); border-radius:var(--radius-card); padding:22px; margin-bottom:20px;}
+  .panel h2{font-size:18px; margin-bottom:16px;}
+
+  .stat-grid{display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:14px; margin-bottom:20px;}
+  .stat-card{background:var(--card-bg); border:1px solid var(--border); border-radius:var(--radius-card); padding:16px;}
+  .stat-card .label{font-size:12px; color:var(--muted);}
+  .stat-card .value{font-family:var(--font-display); font-size:24px; font-weight:700; margin-top:6px;}
+
+  .form-grid{display:grid; grid-template-columns:1fr 1fr; gap:14px;}
+  .form-grid .full{grid-column:1/-1;}
+  label{display:block; font-size:13px; color:var(--muted); margin-bottom:5px;}
+  input[type=text],input[type=number],input[type=tel],select{width:100%; padding:10px 12px; border:1px solid var(--border); border-radius:9px; background:var(--bg); color:var(--fg); font-size:14px;}
+  input[type=file]{width:100%; padding:9px; border:1px dashed var(--border); border-radius:9px; background:var(--bg); color:var(--muted); font-size:13px;}
+  .field{margin-bottom:0;}
+  .radio-group{display:flex; gap:14px; align-items:center; margin-top:6px;}
+  .radio-group label{display:flex; align-items:center; gap:6px; color:var(--fg); font-size:14px; margin:0;}
+  .compute-box{grid-column:1/-1; background:var(--stone); border-radius:10px; padding:14px 16px; display:flex; justify-content:space-between; flex-wrap:wrap; gap:10px;}
+  .compute-box div{font-size:13px; color:var(--muted);}
+  .compute-box strong{display:block; font-family:var(--font-display); font-size:19px; color:var(--fg); font-weight:700;}
+  .primary-btn{background:var(--clay); color:#fff; border:none; padding:11px 20px; border-radius:var(--radius-pill); font-size:14px; font-weight:600;}
+  .ghost-btn{background:transparent; border:1px solid var(--border); padding:8px 14px; border-radius:var(--radius-pill); font-size:13px; color:var(--fg);}
+  .small-btn{padding:6px 12px; font-size:12px; border-radius:var(--radius-pill); border:1px solid var(--border); background:transparent; color:var(--fg);}
+  .small-btn.danger{color:var(--danger); border-color:var(--danger);}
+  .small-btn.success{color:var(--success); border-color:var(--success);}
+  .small-btn:disabled{opacity:0.4; cursor:not-allowed;}
+
+  table{width:100%; border-collapse:collapse; font-size:13.5px;}
+  th,td{text-align:left; padding:10px 8px; border-bottom:1px solid var(--border); vertical-align:middle; white-space:nowrap;}
+  th{color:var(--muted); font-weight:500; font-size:12px;}
+  .thumb{width:40px; height:40px; border-radius:8px; object-fit:cover; background:var(--stone);}
+  .tag{padding:3px 10px; border-radius:var(--radius-pill); font-size:11.5px; font-weight:600;}
+  .tag.stock{background:rgba(63,125,88,0.14); color:var(--success);}
+  .tag.sold{background:rgba(107,101,88,0.14); color:var(--muted);}
+  .tabs-row{display:flex; gap:8px; margin-bottom:16px;}
+  .tabs-row button{border:1px solid var(--border); background:transparent; padding:7px 14px; border-radius:var(--radius-pill); font-size:13px; color:var(--fg); opacity:0.7;}
+  .tabs-row button.active{opacity:1; background:var(--stone); font-weight:600;}
+
+  .agent-card{display:flex; justify-content:space-between; align-items:center; padding:14px; border:1px solid var(--border); border-radius:12px; margin-bottom:10px; flex-wrap:wrap; gap:10px;}
+  .agent-card .name{font-weight:600; font-size:15px;}
+  .agent-card .meta{font-size:12.5px; color:var(--muted);}
+  .agent-money{display:flex; gap:14px; align-items:center; flex-wrap:wrap;}
+  .agent-money div{text-align:right;}
+  .agent-money .amt{font-family:var(--font-display); font-weight:700; font-size:16px;}
+
+  .lock-screen{max-width:340px; margin:80px auto; text-align:center; background:var(--card-bg); border:1px solid var(--border); border-radius:var(--radius-card); padding:30px;}
+  .lock-screen input{text-align:center; letter-spacing:4px; font-size:18px; margin:14px 0;}
+  .note{font-size:12.5px; color:var(--muted); margin-top:6px;}
+
+  .modal-bg{position:fixed; inset:0; background:rgba(20,20,18,0.55); display:flex; align-items:center; justify-content:center; z-index:50; padding:16px;}
+  .modal{background:var(--card-bg); border-radius:var(--radius-card); padding:26px; max-width:360px; width:100%; border:1px solid var(--border);}
+  .modal h3{margin-bottom:6px;}
+  .modal p{color:var(--muted); font-size:13.5px; margin:0 0 16px;}
+  .modal .field{margin-bottom:12px;}
+  .modal-actions{display:flex; gap:10px; margin-top:16px;}
+  .modal-actions button{flex:1;}
+
+  .photo-preview{display:flex; gap:8px; margin-top:10px; flex-wrap:wrap;}
+  .photo-preview .ph{position:relative;}
+  .photo-preview img{width:56px; height:56px; object-fit:cover; border-radius:8px; border:1px solid var(--border);}
+  .photo-preview .rm{position:absolute; top:-6px; right:-6px; width:18px; height:18px; border-radius:50%; background:var(--danger); color:#fff; border:none; font-size:11px; line-height:1;}
+
+  @media(max-width:720px){
+    .admin-shell{flex-direction:column;}
+    .admin-side{width:100%; flex-direction:row; overflow-x:auto; position:static;}
+    .form-grid{grid-template-columns:1fr;}
+    .topbar{padding:14px 16px;}
+    .wrap{padding:18px 14px;}
+  }
+</style>
+</head>
+<body>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<div id="loadingOverlay" style="position:fixed; inset:0; z-index:200; background:#EFEBE3; display:flex; align-items:center; justify-content:center; font-family:'IBM Plex Sans',sans-serif; color:#1F2D50; font-size:15px;">Chargement de la boutique…</div>
+
+<div class="topbar">
+  <div class="brand"><h1>Nadia</h1><span>boutique en ligne</span></div>
+  <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+    <button id="installBtn" class="hidden" style="border:1px solid rgba(255,255,255,0.4); background:transparent; color:#fff; padding:8px 16px; border-radius:999px; font-size:13px; font-weight:600;">📲 Installer l'application</button>
+    <div class="nav-toggle">
+      <button id="navMarketBtn" class="active">Boutique</button>
+      <button id="navAdminBtn">Espace admin</button>
+    </div>
+  </div>
+</div>
+
+<div class="wrap">
+
+  <!-- ================= MARKETPLACE ================= -->
+  <div id="marketView">
+    <div class="market-hero">
+      <div>
+        <h2 style="font-size:26px;">Articles disponibles</h2>
+        <p>Sélection trouvée en boutique, prête à livrer. Prix tout compris, livraison incluse.</p>
+      </div>
+    </div>
+    <div id="marketGrid" class="market-grid"></div>
+  </div>
+
+  <!-- ================= ADMIN / AGENT ================= -->
+  <div id="adminView" class="hidden">
+
+    <div id="lockScreen" class="lock-screen">
+      <h2 style="font-size:19px;">Espace admin & agents</h2>
+      <p class="note">Entrez votre code d'accès.</p>
+      <input type="text" id="pinInput" placeholder="••••">
+      <div><button class="primary-btn" id="unlockBtn" style="width:100%;">Entrer</button></div>
+      <p class="note">Code admin par défaut : 0000 — modifiable dans Réglages. Agents : utilisez le code personnel fourni par l'administrateur.</p>
+    </div>
+
+    <div id="adminInner" class="hidden">
+      <div class="admin-shell">
+        <div class="admin-side">
+          <button class="admin-tab active" data-tab="dashboard" data-role="admin">Tableau de bord</button>
+          <button class="admin-tab" data-tab="add" data-role="both">Ajouter un article</button>
+          <button class="admin-tab" data-tab="agentdash" data-role="agent">Mon tableau de bord</button>
+          <button class="admin-tab" data-tab="articles" data-role="admin">Articles</button>
+          <button class="admin-tab" data-tab="commandes" data-role="admin">Commandes</button>
+          <button class="admin-tab" data-tab="agents" data-role="admin">Agents</button>
+          <button class="admin-tab" data-tab="settings" data-role="admin">Réglages</button>
+          <button id="logoutBtn" style="margin-top:10px; border-top:1px solid var(--border); padding:14px 14px 0; text-align:left; background:transparent; border-left:none; border-right:none; border-bottom:none; opacity:0.6; color:var(--fg); font-size:14px;">Se déconnecter</button>
+        </div>
+
+        <div class="admin-main">
+
+          <!-- DASHBOARD -->
+          <div id="tab-dashboard" class="admin-tab-content">
+            <div class="stat-grid" id="statGrid"></div>
+            <div class="panel">
+              <h2>Commissions à verser par agent</h2>
+              <div id="dashAgentList"></div>
+            </div>
+          </div>
+
+          <!-- ADD ARTICLE -->
+          <div id="tab-add" class="admin-tab-content hidden">
+            <div class="panel">
+              <h2>Nouvel article</h2>
+              <div class="form-grid">
+                <div class="field full">
+                  <label>Photos de l'article (jusqu'à 3)</label>
+                  <div style="display:flex; gap:10px; flex-wrap:wrap;">
+                    <input type="file" id="artPhotoGallery" accept="image/*" multiple style="flex:1; min-width:150px;">
+                    <input type="file" id="artPhotoCamera" accept="image/*" capture="environment" style="flex:1; min-width:150px;">
+                  </div>
+                  <p class="note">À gauche : choisir des fichiers. À droite : prendre une photo avec l'appareil.</p>
+                  <div class="photo-preview" id="photoPreview"></div>
+                </div>
+                <div class="field">
+                  <label>Nom de l'article</label>
+                  <input type="text" id="artName" placeholder="Ex : Sac à main cuir marron">
+                </div>
+                <div class="field">
+                  <label>Magasin / lieu d'achat (privé, non visible client)</label>
+                  <input type="text" id="artStore" placeholder="Ex : Marché de Treichville">
+                </div>
+                <div class="field">
+                  <label>Prix payé en magasin (FCFA, par unité)</label>
+                  <input type="number" id="artStorePrice" placeholder="0">
+                </div>
+                <div class="field">
+                  <label>Quantité en stock</label>
+                  <input type="number" id="artQuantity" min="1" value="1">
+                </div>
+                <div class="field">
+                  <label>Frais de livraison (FCFA)</label>
+                  <input type="number" id="artDelivery" placeholder="0">
+                </div>
+                <div class="field" id="artMarginTypeField">
+                  <label>Type de marge</label>
+                  <div class="radio-group">
+                    <label><input type="radio" name="marginType" value="percent"> % du prix magasin</label>
+                    <label><input type="radio" name="marginType" value="fixed"> Montant fixe</label>
+                  </div>
+                </div>
+                <div class="field" id="artMarginValueField">
+                  <label id="marginLabel">Marge (%)</label>
+                  <input type="number" id="artMargin" placeholder="0">
+                </div>
+                <div class="field full" id="artAgentField">
+                  <label>Agent enregistreur</label>
+                  <select id="artAgent"><option value="">— aucun / moi-même —</option></select>
+                </div>
+                <div class="compute-box" id="computeBoxWrap">
+                  <div>Prix de vente affiché en boutique<strong id="computedPrice">0 FCFA</strong></div>
+                  <div>Marge réalisée (par unité)<strong id="computedMargin">0 FCFA</strong></div>
+                  <div>Commission agent estimée (par unité)<strong id="computedCommission">0 FCFA</strong></div>
+                </div>
+                <p class="note full hidden" id="agentPriceNote" style="grid-column:1/-1; margin:0;">La marge et le prix de vente sont gérés par l'administrateur — ils ne s'affichent pas ici.</p>
+                <div class="full">
+                  <button class="primary-btn" id="saveArticleBtn">Ajouter à la boutique</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- AGENT DASHBOARD -->
+          <div id="tab-agentdash" class="admin-tab-content hidden">
+            <div class="stat-grid" id="agentDashStats"></div>
+            <div class="panel">
+              <h2>Mes magasins</h2>
+              <div id="agentDashStores"></div>
+            </div>
+            <div class="panel">
+              <h2>Mes articles enregistrés</h2>
+              <div style="overflow-x:auto;">
+                <table>
+                  <thead><tr><th></th><th>Article</th><th>Stock</th></tr></thead>
+                  <tbody id="agentDashArticlesBody"></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          <!-- ARTICLES -->
+          <div id="tab-articles" class="admin-tab-content hidden">
+            <div class="panel">
+              <div class="tabs-row">
+                <button class="art-filter active" data-filter="all">Tous</button>
+                <button class="art-filter" data-filter="available">Disponibles</button>
+                <button class="art-filter" data-filter="empty">Épuisés</button>
+              </div>
+              <div style="overflow-x:auto;">
+                <table>
+                  <thead>
+                    <tr>
+                      <th></th><th>Article</th><th>Magasin</th><th>Prix achat</th><th>Marge</th><th>Livraison</th>
+                      <th>Prix vente</th><th>Agent</th><th>Commission</th><th>Marge nette</th><th>Stock</th><th>Vendus</th><th>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody id="articlesTableBody"></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          <!-- COMMANDES -->
+          <div id="tab-commandes" class="admin-tab-content hidden">
+            <div class="panel">
+              <h2>Commandes reçues</h2>
+              <p class="note" style="margin-bottom:14px;">Coordonnées des clients pour les joindre et organiser la livraison. Une commande annulée remet l'article en stock.</p>
+              <div class="tabs-row">
+                <button class="order-filter active" data-filter="all">Toutes</button>
+                <button class="order-filter" data-filter="valid">Valides</button>
+                <button class="order-filter" data-filter="cancelled">Annulées</button>
+              </div>
+              <div style="overflow-x:auto;">
+                <table>
+                  <thead><tr><th></th><th>Article</th><th>Prix</th><th>Client</th><th>Téléphone</th><th>Date</th><th>Statut</th><th>Actions</th></tr></thead>
+                  <tbody id="ordersTableBody"></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          <!-- AGENTS -->
+          <div id="tab-agents" class="admin-tab-content hidden">
+            <div class="panel">
+              <h2>Ajouter un agent</h2>
+              <div class="form-grid">
+                <div class="field">
+                  <label>Nom de l'agent</label>
+                  <input type="text" id="agentName" placeholder="Ex : Fatou K.">
+                </div>
+                <div class="field">
+                  <label>Téléphone</label>
+                  <input type="tel" id="agentPhone" placeholder="Ex : 07 00 00 00 00">
+                </div>
+                <div class="field">
+                  <label>Commission par défaut (% de la marge)</label>
+                  <input type="number" id="agentCommission" placeholder="Ex : 20">
+                </div>
+                <div class="full">
+                  <button class="primary-btn" id="saveAgentBtn">Ajouter l'agent</button>
+                </div>
+              </div>
+            </div>
+            <div class="panel">
+              <h2>Agents enregistrés</h2>
+              <div id="agentList"></div>
+            </div>
+          </div>
+
+          <!-- SETTINGS -->
+          <div id="tab-settings" class="admin-tab-content hidden">
+            <div class="panel">
+              <h2>Marge par défaut</h2>
+              <p class="note" style="margin-bottom:14px;">Utilisée quand un agent ajoute un article (il ne choisit pas la marge lui-même). Réservée à l'admin.</p>
+              <div class="form-grid">
+                <div class="field">
+                  <label>Type</label>
+                  <div class="radio-group">
+                    <label><input type="radio" name="defMarginType" value="percent"> % du prix magasin</label>
+                    <label><input type="radio" name="defMarginType" value="fixed"> Montant fixe</label>
+                  </div>
+                </div>
+                <div class="field">
+                  <label id="defMarginLabel">Valeur (%)</label>
+                  <input type="number" id="defMarginValue" placeholder="30">
+                </div>
+                <div class="full">
+                  <button class="ghost-btn" id="saveDefaultMarginBtn">Enregistrer la marge par défaut</button>
+                </div>
+              </div>
+            </div>
+            <div class="panel">
+              <h2>Réglages</h2>
+              <div class="form-grid">
+                <div class="field">
+                  <label>Nouveau code d'accès admin</label>
+                  <input type="text" id="newPin" placeholder="0000">
+                </div>
+                <div class="full">
+                  <button class="ghost-btn" id="savePinBtn">Mettre à jour le code</button>
+                </div>
+                <div class="full" style="border-top:1px solid var(--border); padding-top:16px; margin-top:6px;">
+                  <label>Zone sensible</label>
+                  <button class="small-btn danger" id="resetAllBtn">Réinitialiser toutes les données</button>
+                  <p class="note">Supprime articles, agents, commandes et ventes pour tout le monde (admin et agents), car les données sont désormais partagées en ligne.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="modalRoot"></div>
+
+<script>
+(async function(){
+  const FCFA = n => (Math.round(n||0)).toLocaleString('fr-FR') + ' FCFA';
+  const uid = () => Math.random().toString(36).slice(2,10);
+
+  const SUPABASE_URL = 'https://seknmhtjqaucgefxijaa.supabase.co';
+  const SUPABASE_KEY = 'sb_publishable_g5JBCWWlW9fkmse3doyB5g_sErktsUP';
+  const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+  // ---------- DB <-> JS mapping ----------
+  function articleFromDb(r){
+    return {
+      id: r.id, name: r.name, storeName: r.store_name || '', storePrice: Number(r.store_price)||0,
+      delivery: Number(r.delivery)||0, marginType: r.margin_type, marginVal: Number(r.margin_val)||0,
+      margin: Number(r.margin)||0, final: Number(r.final_price)||0, agentId: r.agent_id,
+      photos: r.photos || [], quantity: r.quantity, remaining: r.remaining, createdAt: r.created_at
+    };
+  }
+  function agentFromDb(r){
+    return { id: r.id, name: r.name, phone: r.phone || '', commissionPct: Number(r.commission_pct)||0, paidOut: Number(r.paid_out)||0, code: r.code };
+  }
+  function orderFromDb(r){
+    return { id:r.id, articleId:r.article_id, articleName:r.article_name, photo:r.photo, price:Number(r.price)||0,
+      margin:Number(r.margin)||0, agentId:r.agent_id, agentName:r.agent_name, commissionPct:Number(r.commission_pct)||0,
+      commission:Number(r.commission)||0, buyerName:r.buyer_name||'', buyerPhone:r.buyer_phone||'', status:r.status,
+      manual:r.manual, soldAt:r.sold_at, cancelledAt:r.cancelled_at };
+  }
+  function settingsFromDb(r){
+    return { pin: r.pin, defaultMarginType: r.default_margin_type, defaultMarginValue: Number(r.default_margin_value)||0 };
+  }
+
+  let articles = [];
+  let agents = [];
+  let orders = [];
+  let settings = { pin: '0000', defaultMarginType: 'percent', defaultMarginValue: 30 };
+  let currentRole = null;
+  let currentAgentId = null;
+
+  async function loadAll(){
+    const [agentsRes, articlesRes, ordersRes, settingsRes] = await Promise.all([
+      sb.from('agents').select('*').order('created_at'),
+      sb.from('articles').select('*').order('created_at'),
+      sb.from('orders').select('*').order('sold_at'),
+      sb.from('settings').select('*').eq('id', 1).maybeSingle()
+    ]);
+    if(agentsRes.error || articlesRes.error || ordersRes.error || settingsRes.error){
+      throw (agentsRes.error || articlesRes.error || ordersRes.error || settingsRes.error);
+    }
+    agents = (agentsRes.data||[]).map(agentFromDb);
+    articles = (articlesRes.data||[]).map(articleFromDb);
+    orders = (ordersRes.data||[]).map(orderFromDb);
+    settings = settingsRes.data ? settingsFromDb(settingsRes.data) : { pin:'0000', defaultMarginType:'percent', defaultMarginValue:30 };
+  }
+
+  function agentById(id){ return agents.find(a => a.id === id); }
+
+  function generateAgentCode(){
+    let code;
+    do{ code = String(Math.floor(1000 + Math.random()*9000)); }
+    while(agents.some(a => a.code === code) || code === settings.pin);
+    return code;
+  }
+
+  function computeFinalPrice(storePrice, marginType, marginVal, delivery){
+    storePrice = Number(storePrice)||0; marginVal = Number(marginVal)||0; delivery = Number(delivery)||0;
+    const margin = marginType === 'percent' ? storePrice * (marginVal/100) : marginVal;
+    return { margin, final: storePrice + margin + delivery };
+  }
+
+  function currentCommissionPerUnit(article){
+    if(!article.agentId) return 0;
+    const agent = agentById(article.agentId);
+    if(!agent) return 0;
+    return article.margin * (Number(agent.commissionPct)||0) / 100;
+  }
+  function currentNetMarginPerUnit(article){ return article.margin - currentCommissionPerUnit(article); }
+
+  async function sellOneUnit(article, buyerName, buyerPhone, manual){
+    if(!article || article.remaining <= 0) return false;
+    const agent = article.agentId ? agentById(article.agentId) : null;
+    const commissionPct = agent ? (Number(agent.commissionPct)||0) : 0;
+    const commission = article.margin * commissionPct / 100;
+    const orderPayload = {
+      article_id: article.id, article_name: article.name,
+      photo: (article.photos && article.photos[0]) || null,
+      price: article.final, margin: article.margin,
+      agent_id: article.agentId || null, agent_name: agent ? agent.name : null,
+      commission_pct: commissionPct, commission,
+      buyer_name: buyerName || (manual ? 'Vente enregistrée par l\'admin' : ''),
+      buyer_phone: buyerPhone || '', status: 'valid', manual: !!manual
+    };
+    const { data: orderData, error: orderErr } = await sb.from('orders').insert(orderPayload).select().single();
+    if(orderErr){ alert('Connexion impossible, réessayez.'); return false; }
+    const newRemaining = article.remaining - 1;
+    const { error: artErr } = await sb.from('articles').update({ remaining: newRemaining }).eq('id', article.id);
+    if(artErr){ alert('Connexion impossible, réessayez.'); return false; }
+    article.remaining = newRemaining;
+    orders.push(orderFromDb(orderData));
+    return true;
+  }
+
+  function agentStats(agentId){
+    const mine = orders.filter(o => o.agentId === agentId && o.status !== 'cancelled');
+    const totalDue = mine.reduce((s,o) => s + o.commission, 0);
+    return { totalDue, soldCount: mine.length };
+  }
+
+  function escapeHtml(s){
+    return String(s||'').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  }
+
+  // ---------- NAV ----------
+  const navMarketBtn = document.getElementById('navMarketBtn');
+  const navAdminBtn = document.getElementById('navAdminBtn');
+  const marketView = document.getElementById('marketView');
+  const adminView = document.getElementById('adminView');
+  navMarketBtn.onclick = showMarket;
+  navAdminBtn.onclick = showAdmin;
+  function showMarket(){
+    marketView.classList.remove('hidden'); adminView.classList.add('hidden');
+    navMarketBtn.classList.add('active'); navAdminBtn.classList.remove('active');
+    renderMarket();
+  }
+  function showAdmin(){
+    marketView.classList.add('hidden'); adminView.classList.remove('hidden');
+    navAdminBtn.classList.add('active'); navMarketBtn.classList.remove('active');
+  }
+
+  // ---------- LOCK SCREEN ----------
+  const lockScreen = document.getElementById('lockScreen');
+  const adminInner = document.getElementById('adminInner');
+  document.getElementById('unlockBtn').onclick = () => {
+    const val = document.getElementById('pinInput').value.trim();
+    if(val === settings.pin){
+      currentRole = 'admin'; currentAgentId = null;
+      lockScreen.classList.add('hidden'); adminInner.classList.remove('hidden');
+      applyRoleVisibility(); renderAdmin();
+      return;
+    }
+    const agent = agents.find(a => a.code === val);
+    if(agent){
+      currentRole = 'agent'; currentAgentId = agent.id;
+      lockScreen.classList.add('hidden'); adminInner.classList.remove('hidden');
+      applyRoleVisibility(); renderAdmin();
+      return;
+    }
+    document.getElementById('pinInput').style.borderColor = 'var(--danger)';
+  };
+
+  function applyRoleVisibility(){
+    document.querySelectorAll('.admin-tab').forEach(btn => {
+      const role = btn.dataset.role;
+      btn.classList.toggle('hidden', !(role === 'both' || role === currentRole));
+    });
+    document.querySelectorAll('.admin-tab').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.admin-tab-content').forEach(c => c.classList.add('hidden'));
+    const defaultTab = currentRole === 'admin' ? 'dashboard' : 'add';
+    document.querySelector(`.admin-tab[data-tab="${defaultTab}"]`).classList.add('active');
+    document.getElementById('tab-' + defaultTab).classList.remove('hidden');
+
+    const isAgent = currentRole === 'agent';
+    document.getElementById('artAgentField').classList.toggle('hidden', isAgent);
+    document.getElementById('artMarginTypeField').classList.toggle('hidden', isAgent);
+    document.getElementById('artMarginValueField').classList.toggle('hidden', isAgent);
+    document.getElementById('computeBoxWrap').classList.toggle('hidden', isAgent);
+    document.getElementById('agentPriceNote').classList.toggle('hidden', !isAgent);
+    if(!isAgent) presetMarginFields();
+  }
+
+  document.getElementById('logoutBtn').onclick = () => {
+    currentRole = null; currentAgentId = null;
+    document.getElementById('pinInput').value = '';
+    document.getElementById('pinInput').style.borderColor = '';
+    adminInner.classList.add('hidden'); lockScreen.classList.remove('hidden');
+  };
+
+  // ---------- ADMIN TABS ----------
+  document.querySelectorAll('.admin-tab').forEach(btn => {
+    btn.onclick = () => {
+      document.querySelectorAll('.admin-tab').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      document.querySelectorAll('.admin-tab-content').forEach(c => c.classList.add('hidden'));
+      document.getElementById('tab-' + btn.dataset.tab).classList.remove('hidden');
+      if(btn.dataset.tab === 'dashboard') renderDashboard();
+      if(btn.dataset.tab === 'articles') renderArticlesTable();
+      if(btn.dataset.tab === 'commandes') renderOrders();
+      if(btn.dataset.tab === 'agents') renderAgents();
+      if(btn.dataset.tab === 'agentdash') renderAgentDash();
+      if(btn.dataset.tab === 'add') refreshAgentSelect();
+    };
+  });
+
+  function renderAdmin(){
+    renderDashboard(); renderArticlesTable(); renderOrders(); renderAgents();
+    refreshAgentSelect(); initDefaultMarginFields(); updateComputeBox(); renderAgentDash();
+  }
+
+  function refreshAllViews(){
+    renderMarket();
+    if(!adminInner.classList.contains('hidden')) renderAdmin();
+  }
+
+  // ---------- MARKETPLACE RENDER ----------
+  function renderMarket(){
+    const grid = document.getElementById('marketGrid');
+    const inStock = articles.filter(a => a.remaining > 0);
+    if(inStock.length === 0){
+      grid.innerHTML = '<div class="empty-state" style="grid-column:1/-1;">Aucun article disponible pour le moment. Revenez bientôt.</div>';
+      return;
+    }
+    grid.innerHTML = inStock.map(a => {
+      const photos = a.photos || [];
+      return `
+      <div class="product-card">
+        <div class="product-photo" data-id="${a.id}" data-idx="0">
+          ${photos.length ? `<img src="${photos[0]}" alt="${escapeHtml(a.name)}">` : 'Pas de photo'}
+          ${photos.length > 1 ? `<button class="photo-nav prev" data-dir="-1">‹</button><button class="photo-nav next" data-dir="1">›</button>` : ''}
+        </div>
+        <div class="product-body">
+          <h3>${escapeHtml(a.name)}</h3>
+          <div class="delivery-note">Livraison incluse</div>
+          <div class="stock-note">${a.remaining <= 3 ? `Plus que ${a.remaining} en stock !` : `${a.remaining} en stock`}</div>
+          <div class="price-row"><span class="price">${FCFA(a.final)}</span></div>
+          <button class="buy-btn" data-id="${a.id}">Commander</button>
+        </div>
+      </div>`;
+    }).join('');
+
+    grid.querySelectorAll('.buy-btn').forEach(btn => { btn.onclick = () => openOrderModal(btn.dataset.id); });
+    grid.querySelectorAll('.photo-nav').forEach(btn => {
+      btn.onclick = (e) => {
+        e.stopPropagation();
+        const box = btn.closest('.product-photo');
+        const art = articles.find(x => x.id === box.dataset.id);
+        if(!art || !art.photos || art.photos.length < 2) return;
+        let idx = Number(box.dataset.idx)||0;
+        idx = (idx + Number(btn.dataset.dir) + art.photos.length) % art.photos.length;
+        box.dataset.idx = idx;
+        box.querySelector('img').src = art.photos[idx];
+      };
+    });
+  }
+
+  function openOrderModal(articleId){
+    const article = articles.find(a => a.id === articleId);
+    if(!article) return;
+    const root = document.getElementById('modalRoot');
+    root.innerHTML = `
+      <div class="modal-bg" id="modalBg">
+        <div class="modal">
+          <h3>Confirmer la commande</h3>
+          <p>${escapeHtml(article.name)} — ${FCFA(article.final)}, livraison incluse.</p>
+          <div class="field"><label>Nom du client</label><input type="text" id="ordName" placeholder="Votre nom"></div>
+          <div class="field"><label>Téléphone</label><input type="tel" id="ordPhone" placeholder="Votre numéro"></div>
+          <div class="modal-actions">
+            <button class="ghost-btn" id="cancelOrd">Annuler</button>
+            <button class="primary-btn" id="confirmOrd">Confirmer</button>
+          </div>
+        </div>
+      </div>`;
+    document.getElementById('cancelOrd').onclick = () => root.innerHTML = '';
+    document.getElementById('modalBg').onclick = (e) => { if(e.target.id === 'modalBg') root.innerHTML = ''; };
+    document.getElementById('confirmOrd').onclick = async () => {
+      const confirmBtn = document.getElementById('confirmOrd'); confirmBtn.disabled = true;
+      const buyerName = document.getElementById('ordName').value.trim();
+      const buyerPhone = document.getElementById('ordPhone').value.trim();
+      const ok = await sellOneUnit(article, buyerName, buyerPhone, false);
+      if(!ok){ root.innerHTML=''; renderMarket(); alert('Désolé, cet article vient d\'être épuisé.'); return; }
+      root.innerHTML = `
+        <div class="modal-bg" id="modalBg2">
+          <div class="modal" style="text-align:center;">
+            <h3>Commande enregistrée</h3>
+            <p>Merci, vous serez contacté(e) pour la livraison.</p>
+            <button class="primary-btn" id="closeOrd" style="width:100%;">Fermer</button>
+          </div>
+        </div>`;
+      document.getElementById('closeOrd').onclick = () => { root.innerHTML=''; renderMarket(); };
+    };
+  }
+
+  // ---------- ADD ARTICLE ----------
+  let uploadedPhotos = [];
+  function renderPhotoPreview(){
+    const wrap = document.getElementById('photoPreview');
+    wrap.innerHTML = uploadedPhotos.map((src,i) => `
+      <div class="ph"><img src="${src}"><button type="button" class="rm" data-idx="${i}">×</button></div>
+    `).join('');
+    wrap.querySelectorAll('.rm').forEach(btn => {
+      btn.onclick = () => { uploadedPhotos.splice(Number(btn.dataset.idx),1); renderPhotoPreview(); };
+    });
+  }
+  function addPhotosFromFiles(fileList){
+    if(uploadedPhotos.length >= 3){ alert('Maximum 3 photos par article.'); return; }
+    const files = Array.from(fileList).slice(0, 3 - uploadedPhotos.length);
+    Promise.all(files.map(f => new Promise(resolve => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result);
+      reader.readAsDataURL(f);
+    }))).then(results => {
+      uploadedPhotos = uploadedPhotos.concat(results).slice(0,3);
+      renderPhotoPreview();
+    });
+  }
+  document.getElementById('artPhotoGallery').onchange = (e) => { addPhotosFromFiles(e.target.files); e.target.value=''; };
+  document.getElementById('artPhotoCamera').onchange = (e) => { addPhotosFromFiles(e.target.files); e.target.value=''; };
+
+  function refreshAgentSelect(){
+    const sel = document.getElementById('artAgent');
+    const current = sel.value;
+    sel.innerHTML = '<option value="">— aucun / moi-même —</option>' +
+      agents.map(a => `<option value="${a.id}">${escapeHtml(a.name)}</option>`).join('');
+    sel.value = current;
+  }
+
+  document.querySelectorAll('input[name=marginType]').forEach(r => r.onchange = () => {
+    const t = document.querySelector('input[name=marginType]:checked').value;
+    document.getElementById('marginLabel').textContent = t === 'percent' ? 'Marge (%)' : 'Marge (FCFA)';
+    updateComputeBox();
+  });
+  function presetMarginFields(){
+    const radio = document.querySelector(`input[name=marginType][value="${settings.defaultMarginType}"]`);
+    if(radio) radio.checked = true;
+    document.getElementById('marginLabel').textContent = settings.defaultMarginType === 'percent' ? 'Marge (%)' : 'Marge (FCFA)';
+    document.getElementById('artMargin').value = settings.defaultMarginValue;
+    updateComputeBox();
+  }
+
+  ['artStorePrice','artDelivery'].forEach(id => document.getElementById(id).addEventListener('input', updateComputeBox));
+  document.getElementById('artAgent').addEventListener('change', updateComputeBox);
+
+  function updateComputeBox(){
+    const storePrice = document.getElementById('artStorePrice').value;
+    const delivery = document.getElementById('artDelivery').value;
+    let marginType, marginVal;
+    if(currentRole === 'admin'){
+      const checked = document.querySelector('input[name=marginType]:checked');
+      marginType = checked ? checked.value : settings.defaultMarginType;
+      marginVal = Number(document.getElementById('artMargin').value)||0;
+    } else {
+      marginType = settings.defaultMarginType;
+      marginVal = settings.defaultMarginValue;
+    }
+    const { margin, final } = computeFinalPrice(storePrice, marginType, marginVal, delivery);
+    document.getElementById('computedPrice').textContent = FCFA(final);
+    document.getElementById('computedMargin').textContent = FCFA(margin);
+    const agentId = currentRole === 'agent' ? currentAgentId : (document.getElementById('artAgent').value || null);
+    let commission = 0;
+    if(agentId){ const agent = agentById(agentId); if(agent) commission = margin * (Number(agent.commissionPct)||0) / 100; }
+    document.getElementById('computedCommission').textContent = FCFA(commission);
+  }
+
+  document.getElementById('saveArticleBtn').onclick = async () => {
+    const name = document.getElementById('artName').value.trim();
+    const storeName = document.getElementById('artStore').value.trim();
+    const storePrice = Number(document.getElementById('artStorePrice').value)||0;
+    const delivery = Number(document.getElementById('artDelivery').value)||0;
+    const quantity = Math.max(1, Number(document.getElementById('artQuantity').value)||1);
+    let marginType, marginVal;
+    if(currentRole === 'admin'){
+      marginType = document.querySelector('input[name=marginType]:checked').value;
+      marginVal = Number(document.getElementById('artMargin').value)||0;
+    } else {
+      marginType = settings.defaultMarginType;
+      marginVal = settings.defaultMarginValue;
+    }
+    const agentId = currentRole === 'agent' ? currentAgentId : (document.getElementById('artAgent').value || null);
+
+    if(!name){ alert('Merci d\'indiquer le nom de l\'article.'); return; }
+
+    const { margin, final } = computeFinalPrice(storePrice, marginType, marginVal, delivery);
+    const payload = {
+      name, store_name: storeName, store_price: storePrice, delivery,
+      margin_type: marginType, margin_val: marginVal, margin, final_price: final,
+      agent_id: agentId, photos: uploadedPhotos.slice(0,3), quantity, remaining: quantity
+    };
+
+    const saveBtn = document.getElementById('saveArticleBtn'); saveBtn.disabled = true;
+    const { data, error } = await sb.from('articles').insert(payload).select().single();
+    saveBtn.disabled = false;
+    if(error){ alert('Impossible d\'ajouter l\'article, vérifiez la connexion et réessayez.'); return; }
+    articles.push(articleFromDb(data));
+
+    document.getElementById('artName').value = '';
+    document.getElementById('artStore').value = '';
+    document.getElementById('artStorePrice').value = '';
+    document.getElementById('artDelivery').value = '';
+    document.getElementById('artQuantity').value = '1';
+    uploadedPhotos = []; renderPhotoPreview();
+    presetMarginFields();
+    renderAgentDash();
+
+    if(currentRole === 'admin'){
+      document.querySelector('.admin-tab[data-tab="articles"]').click();
+    } else {
+      alert('Article ajouté à la boutique.');
+    }
+  };
+
+  // ---------- ARTICLES TABLE ----------
+  let currentFilter = 'all';
+  document.querySelectorAll('.art-filter').forEach(btn => {
+    btn.onclick = () => {
+      document.querySelectorAll('.art-filter').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      currentFilter = btn.dataset.filter;
+      renderArticlesTable();
+    };
+  });
+
+  function renderArticlesTable(){
+    const tbody = document.getElementById('articlesTableBody');
+    let list = articles.slice().reverse();
+    if(currentFilter === 'available') list = list.filter(a => a.remaining > 0);
+    if(currentFilter === 'empty') list = list.filter(a => a.remaining <= 0);
+
+    if(list.length === 0){
+      tbody.innerHTML = `<tr><td colspan="13" style="color:var(--muted); text-align:center; padding:24px;">Aucun article.</td></tr>`;
+      return;
+    }
+
+    tbody.innerHTML = list.map(a => {
+      const agent = a.agentId ? agentById(a.agentId) : null;
+      const comm = currentCommissionPerUnit(a);
+      const net = currentNetMarginPerUnit(a);
+      const sold = a.quantity - a.remaining;
+      return `
+        <tr>
+          <td>${a.photos && a.photos[0] ? `<img class="thumb" src="${a.photos[0]}">` : ''}</td>
+          <td>${escapeHtml(a.name)}</td>
+          <td>${escapeHtml(a.storeName||'—')}</td>
+          <td>${FCFA(a.storePrice)}</td>
+          <td>${FCFA(a.margin)}</td>
+          <td>${FCFA(a.delivery)}</td>
+          <td><strong>${FCFA(a.final)}</strong></td>
+          <td>${agent ? escapeHtml(agent.name) : '—'}</td>
+          <td>${FCFA(comm)}</td>
+          <td><strong>${FCFA(net)}</strong></td>
+          <td>${a.remaining}/${a.quantity} <span class="tag ${a.remaining>0?'stock':'sold'}">${a.remaining>0?'En stock':'Épuisé'}</span></td>
+          <td>${sold}</td>
+          <td>
+            <button class="small-btn success" data-act="sell1" data-id="${a.id}" ${a.remaining<=0?'disabled':''}>Vendre 1</button>
+            <button class="small-btn" data-act="addstock" data-id="${a.id}">+ Stock</button>
+            <button class="small-btn" data-act="editMargin" data-id="${a.id}">Ajuster marge</button>
+            <button class="small-btn danger" data-act="delete" data-id="${a.id}">Suppr.</button>
+          </td>
+        </tr>
+      `;
+    }).join('');
+
+    tbody.querySelectorAll('button[data-act]').forEach(btn => {
+      btn.onclick = async () => {
+        const art = articles.find(x => x.id === btn.dataset.id);
+        if(!art) return;
+        if(btn.dataset.act === 'sell1'){
+          if(art.remaining <= 0){ alert('Stock épuisé pour cet article.'); }
+          else { await sellOneUnit(art, '', '', true); renderArticlesTable(); renderDashboard(); renderOrders(); }
+        }
+        if(btn.dataset.act === 'addstock'){
+          const n = Number(prompt('Combien d\'unités ajouter au stock ?', '1')) || 0;
+          if(n > 0){
+            const newQty = art.quantity + n, newRem = art.remaining + n;
+            const { error } = await sb.from('articles').update({ quantity:newQty, remaining:newRem }).eq('id', art.id);
+            if(error){ alert('Erreur réseau, réessayez.'); return; }
+            art.quantity = newQty; art.remaining = newRem;
+            renderArticlesTable(); renderDashboard();
+          }
+        }
+        if(btn.dataset.act === 'editMargin'){ openEditMarginModal(art.id); return; }
+        if(btn.dataset.act === 'delete'){
+          if(confirm('Supprimer cet article ?')){
+            const { error } = await sb.from('articles').delete().eq('id', art.id);
+            if(error){ alert('Erreur réseau, réessayez.'); return; }
+            articles = articles.filter(x => x.id !== art.id);
+          }
+          renderArticlesTable(); renderDashboard();
+        }
+      };
+    });
+  }
+
+  function openEditMarginModal(articleId){
+    const article = articles.find(a => a.id === articleId);
+    if(!article) return;
+    const root = document.getElementById('modalRoot');
+    root.innerHTML = `
+      <div class="modal-bg" id="marginModalBg">
+        <div class="modal">
+          <h3>Ajuster la marge</h3>
+          <p>${escapeHtml(article.name)} — prix magasin ${FCFA(article.storePrice)} (par unité)</p>
+          <div class="field">
+            <div class="radio-group">
+              <label><input type="radio" name="editMarginType" value="percent" ${article.marginType === 'percent' ? 'checked' : ''}> % du prix magasin</label>
+              <label><input type="radio" name="editMarginType" value="fixed" ${article.marginType === 'fixed' ? 'checked' : ''}> Montant fixe</label>
+            </div>
+          </div>
+          <div class="field">
+            <label id="editMarginLabel">${article.marginType === 'percent' ? 'Marge (%)' : 'Marge (FCFA)'}</label>
+            <input type="number" id="editMarginValue" value="${article.marginVal}">
+          </div>
+          <div class="modal-actions">
+            <button class="ghost-btn" id="cancelMargin">Annuler</button>
+            <button class="primary-btn" id="confirmMargin">Enregistrer</button>
+          </div>
+        </div>
+      </div>`;
+    document.querySelectorAll('input[name=editMarginType]').forEach(r => r.onchange = () => {
+      const t = document.querySelector('input[name=editMarginType]:checked').value;
+      document.getElementById('editMarginLabel').textContent = t === 'percent' ? 'Marge (%)' : 'Marge (FCFA)';
+    });
+    document.getElementById('cancelMargin').onclick = () => root.innerHTML = '';
+    document.getElementById('marginModalBg').onclick = (e) => { if(e.target.id === 'marginModalBg') root.innerHTML = ''; };
+    document.getElementById('confirmMargin').onclick = async () => {
+      const marginType = document.querySelector('input[name=editMarginType]:checked').value;
+      const marginVal = Number(document.getElementById('editMarginValue').value)||0;
+      const { margin, final } = computeFinalPrice(article.storePrice, marginType, marginVal, article.delivery);
+      const { error } = await sb.from('articles').update({ margin_type:marginType, margin_val:marginVal, margin, final_price:final }).eq('id', article.id);
+      if(error){ alert('Erreur réseau, réessayez.'); return; }
+      article.marginType = marginType; article.marginVal = marginVal;
+      article.margin = margin; article.final = final;
+      root.innerHTML = ''; renderArticlesTable(); renderDashboard();
+    };
+  }
+
+  // ---------- COMMANDES ----------
+  let orderFilter = 'all';
+  document.querySelectorAll('.order-filter').forEach(btn => {
+    btn.onclick = () => {
+      document.querySelectorAll('.order-filter').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      orderFilter = btn.dataset.filter;
+      renderOrders();
+    };
+  });
+
+  async function cancelOrder(orderId){
+    const order = orders.find(o => o.id === orderId);
+    if(!order || order.status === 'cancelled') return;
+    const cancelledAt = new Date().toISOString();
+    const { error: orderErr } = await sb.from('orders').update({ status:'cancelled', cancelled_at: cancelledAt }).eq('id', orderId);
+    if(orderErr){ alert('Erreur réseau, réessayez.'); return; }
+    order.status = 'cancelled'; order.cancelledAt = cancelledAt;
+    const article = articles.find(a => a.id === order.articleId);
+    if(article){
+      const newRemaining = Math.min(article.quantity, article.remaining + 1);
+      const { error: artErr } = await sb.from('articles').update({ remaining: newRemaining }).eq('id', article.id);
+      if(!artErr) article.remaining = newRemaining;
+    }
+    renderOrders(); renderArticlesTable(); renderDashboard(); renderAgentDash();
+  }
+
+  async function reactivateOrder(orderId){
+    const order = orders.find(o => o.id === orderId);
+    if(!order || order.status !== 'cancelled') return;
+    const article = articles.find(a => a.id === order.articleId);
+    if(article && article.remaining <= 0){ alert('Stock épuisé, impossible de réactiver cette commande.'); return; }
+    const { error: orderErr } = await sb.from('orders').update({ status:'valid', cancelled_at:null }).eq('id', orderId);
+    if(orderErr){ alert('Erreur réseau, réessayez.'); return; }
+    order.status = 'valid'; delete order.cancelledAt;
+    if(article){
+      const newRemaining = article.remaining - 1;
+      const { error: artErr } = await sb.from('articles').update({ remaining:newRemaining }).eq('id', article.id);
+      if(!artErr) article.remaining = newRemaining;
+    }
+    renderOrders(); renderArticlesTable(); renderDashboard(); renderAgentDash();
+  }
+
+  function renderOrders(){
+    const tbody = document.getElementById('ordersTableBody');
+    let list = orders.slice().reverse();
+    if(orderFilter === 'valid') list = list.filter(o => o.status !== 'cancelled');
+    if(orderFilter === 'cancelled') list = list.filter(o => o.status === 'cancelled');
+    if(list.length === 0){
+      tbody.innerHTML = `<tr><td colspan="8" style="color:var(--muted); text-align:center; padding:24px;">Aucune commande.</td></tr>`;
+      return;
+    }
+    tbody.innerHTML = list.map(o => {
+      const cancelled = o.status === 'cancelled';
+      return `
+      <tr${cancelled ? ' style="opacity:0.55;"' : ''}>
+        <td>${o.photo ? `<img class="thumb" src="${o.photo}">` : ''}</td>
+        <td>${escapeHtml(o.articleName)}</td>
+        <td>${FCFA(o.price)}</td>
+        <td>${escapeHtml(o.buyerName || '—')}</td>
+        <td>${escapeHtml(o.buyerPhone || '—')}</td>
+        <td>${o.soldAt ? new Date(o.soldAt).toLocaleDateString('fr-FR', {day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit'}) : '—'}</td>
+        <td><span class="tag ${cancelled ? 'sold' : 'stock'}">${cancelled ? 'Annulée' : 'Valide'}</span></td>
+        <td>
+          ${cancelled
+            ? `<button class="small-btn success" data-act="reactivate" data-id="${o.id}">Réactiver</button>`
+            : `<button class="small-btn danger" data-act="cancel" data-id="${o.id}">Annuler</button>`}
+        </td>
+      </tr>`;
+    }).join('');
+    tbody.querySelectorAll('button[data-act]').forEach(btn => {
+      btn.onclick = async () => {
+        if(btn.dataset.act === 'cancel'){
+          if(confirm('Annuler cette commande et remettre l\'article en stock ?')) await cancelOrder(btn.dataset.id);
+        }
+        if(btn.dataset.act === 'reactivate') await reactivateOrder(btn.dataset.id);
+      };
+    });
+  }
+
+  // ---------- AGENT DASHBOARD ----------
+  function renderAgentDash(){
+    if(currentRole !== 'agent' || !currentAgentId) return;
+    const agent = agentById(currentAgentId);
+    if(!agent) return;
+    const stats = agentStats(agent.id);
+    const remaining = Math.max(0, stats.totalDue - (agent.paidOut||0));
+    const myArticles = articles.filter(a => a.agentId === agent.id);
+    const stores = [...new Set(myArticles.map(a => a.storeName).filter(Boolean))];
+    const unitsInStock = myArticles.reduce((s,a) => s + a.remaining, 0);
+
+    document.getElementById('agentDashStats').innerHTML = `
+      <div class="stat-card"><div class="label">Produits enregistrés</div><div class="value">${myArticles.length}</div></div>
+      <div class="stat-card"><div class="label">Unités en stock</div><div class="value">${unitsInStock}</div></div>
+      <div class="stat-card"><div class="label">Unités vendues</div><div class="value">${stats.soldCount}</div></div>
+      <div class="stat-card"><div class="label">Déjà payé</div><div class="value">${FCFA(agent.paidOut||0)}</div></div>
+      <div class="stat-card"><div class="label">Reste à me payer</div><div class="value">${FCFA(remaining)}</div></div>
+    `;
+
+    document.getElementById('agentDashStores').innerHTML = stores.length
+      ? stores.map(s => `<span class="tag stock" style="margin-right:6px;">${escapeHtml(s)}</span>`).join('')
+      : '<p class="note">Aucun magasin enregistré pour le moment.</p>';
+
+    const tbody = document.getElementById('agentDashArticlesBody');
+    if(myArticles.length === 0){
+      tbody.innerHTML = `<tr><td colspan="3" style="color:var(--muted); text-align:center; padding:20px;">Aucun article enregistré.</td></tr>`;
+    } else {
+      tbody.innerHTML = myArticles.slice().reverse().map(a => `
+        <tr>
+          <td>${a.photos && a.photos[0] ? `<img class="thumb" src="${a.photos[0]}">` : ''}</td>
+          <td>${escapeHtml(a.name)}</td>
+          <td>${a.remaining}/${a.quantity} <span class="tag ${a.remaining>0?'stock':'sold'}">${a.remaining>0?'En stock':'Épuisé'}</span></td>
+        </tr>
+      `).join('');
+    }
+  }
+
+  // ---------- AGENTS ----------
+  document.getElementById('saveAgentBtn').onclick = async () => {
+    const name = document.getElementById('agentName').value.trim();
+    const phone = document.getElementById('agentPhone').value.trim();
+    const pct = Number(document.getElementById('agentCommission').value)||0;
+    if(!name){ alert('Merci d\'indiquer le nom de l\'agent.'); return; }
+    const code = generateAgentCode();
+    const { data, error } = await sb.from('agents').insert({ name, phone, commission_pct: pct, paid_out: 0, code }).select().single();
+    if(error){ alert('Impossible d\'ajouter l\'agent, réessayez.'); return; }
+    agents.push(agentFromDb(data));
+    document.getElementById('agentName').value='';
+    document.getElementById('agentPhone').value='';
+    document.getElementById('agentCommission').value='';
+    renderAgents(); refreshAgentSelect();
+    alert(`Agent ajouté. Son code d'accès personnel est : ${code}\nCommuniquez-lui ce code pour qu'il puisse ajouter des articles et suivre ses gains.`);
+  };
+
+  function renderAgents(){
+    const list = document.getElementById('agentList');
+    if(agents.length === 0){
+      list.innerHTML = '<p class="note">Aucun agent enregistré pour le moment.</p>';
+    } else {
+      list.innerHTML = agents.map(a => {
+        const stats = agentStats(a.id);
+        const remaining = Math.max(0, stats.totalDue - (a.paidOut||0));
+        return `
+          <div class="agent-card">
+            <div>
+              <div class="name">${escapeHtml(a.name)}</div>
+              <div class="meta">${escapeHtml(a.phone||'—')} · ${a.commissionPct}% de la marge · ${stats.soldCount} vente(s)</div>
+              <div class="meta">Code d'accès : <strong style="color:var(--fg); letter-spacing:1px;">${a.code}</strong></div>
+            </div>
+            <div class="agent-money">
+              <div><div class="meta">Dû total</div><div class="amt">${FCFA(remaining)}</div></div>
+              <button class="small-btn" data-act="regen" data-id="${a.id}">Régénérer code</button>
+              <button class="small-btn success" data-act="pay" data-id="${a.id}">Marquer payé</button>
+              <button class="small-btn danger" data-act="delAgent" data-id="${a.id}">Suppr.</button>
+            </div>
+          </div>
+        `;
+      }).join('');
+      list.querySelectorAll('button[data-act]').forEach(btn => {
+        btn.onclick = async () => {
+          const agent = agentById(btn.dataset.id);
+          if(!agent) return;
+          if(btn.dataset.act === 'pay'){
+            const stats = agentStats(agent.id);
+            const { error } = await sb.from('agents').update({ paid_out: stats.totalDue }).eq('id', agent.id);
+            if(error){ alert('Erreur réseau, réessayez.'); return; }
+            agent.paidOut = stats.totalDue;
+            renderAgents(); renderDashboard();
+          }
+          if(btn.dataset.act === 'regen'){
+            const newCode = generateAgentCode();
+            const { error } = await sb.from('agents').update({ code: newCode }).eq('id', agent.id);
+            if(error){ alert('Erreur réseau, réessayez.'); return; }
+            agent.code = newCode;
+            renderAgents();
+            alert(`Nouveau code d'accès pour ${agent.name} : ${agent.code}`);
+          }
+          if(btn.dataset.act === 'delAgent'){
+            if(confirm('Supprimer cet agent ? Les articles liés resteront mais sans agent associé.')){
+              const { error } = await sb.from('agents').delete().eq('id', agent.id);
+              if(error){ alert('Erreur réseau, réessayez.'); return; }
+              agents = agents.filter(x => x.id !== agent.id);
+              articles.forEach(a => { if(a.agentId === agent.id) a.agentId = null; });
+              renderAgents(); refreshAgentSelect(); renderArticlesTable();
+            }
+          }
+        };
+      });
+    }
+    renderDashboard();
+  }
+
+  // ---------- DASHBOARD ----------
+  function renderDashboard(){
+    const totalRemaining = articles.reduce((s,a) => s + a.remaining, 0);
+    const productsAvailable = articles.filter(a => a.remaining > 0).length;
+    const validOrders = orders.filter(o => o.status !== 'cancelled');
+    const unitsSold = validOrders.length;
+    const revenue = validOrders.reduce((s,o) => s + o.price, 0);
+    const totalMargin = validOrders.reduce((s,o) => s + o.margin, 0);
+    const totalCommissions = validOrders.reduce((s,o) => s + o.commission, 0);
+    const netProfit = totalMargin - totalCommissions;
+
+    document.getElementById('statGrid').innerHTML = `
+      <div class="stat-card"><div class="label">Produits disponibles</div><div class="value">${productsAvailable}</div></div>
+      <div class="stat-card"><div class="label">Unités en stock</div><div class="value">${totalRemaining}</div></div>
+      <div class="stat-card"><div class="label">Unités vendues</div><div class="value">${unitsSold}</div></div>
+      <div class="stat-card"><div class="label">Chiffre d'affaires</div><div class="value">${FCFA(revenue)}</div></div>
+      <div class="stat-card"><div class="label">Marge totale</div><div class="value">${FCFA(totalMargin)}</div></div>
+      <div class="stat-card"><div class="label">Commissions dues (cumul)</div><div class="value">${FCFA(totalCommissions)}</div></div>
+      <div class="stat-card"><div class="label">Marge nette totale (ce qui reste en caisse)</div><div class="value">${FCFA(netProfit)}</div></div>
+    `;
+
+    const dashAgentList = document.getElementById('dashAgentList');
+    if(agents.length === 0){
+      dashAgentList.innerHTML = '<p class="note">Ajoutez des agents pour suivre leurs commissions ici.</p>';
+    } else {
+      dashAgentList.innerHTML = agents.map(a => {
+        const stats = agentStats(a.id);
+        const remaining = Math.max(0, stats.totalDue - (a.paidOut||0));
+        return `<div class="agent-card">
+          <div><div class="name">${escapeHtml(a.name)}</div><div class="meta">${stats.soldCount} vente(s) · ${a.commissionPct}%</div></div>
+          <div class="agent-money"><div><div class="meta">Reste à verser</div><div class="amt">${FCFA(remaining)}</div></div></div>
+        </div>`;
+      }).join('');
+    }
+  }
+
+  // ---------- SETTINGS ----------
+  document.querySelectorAll('input[name=defMarginType]').forEach(r => r.onchange = () => {
+    const t = document.querySelector('input[name=defMarginType]:checked').value;
+    document.getElementById('defMarginLabel').textContent = t === 'percent' ? 'Valeur (%)' : 'Valeur (FCFA)';
+  });
+  function initDefaultMarginFields(){
+    const radio = document.querySelector(`input[name=defMarginType][value="${settings.defaultMarginType}"]`);
+    if(radio) radio.checked = true;
+    document.getElementById('defMarginLabel').textContent = settings.defaultMarginType === 'percent' ? 'Valeur (%)' : 'Valeur (FCFA)';
+    document.getElementById('defMarginValue').value = settings.defaultMarginValue;
+  }
+  document.getElementById('saveDefaultMarginBtn').onclick = async () => {
+    const newType = document.querySelector('input[name=defMarginType]:checked').value;
+    const newVal = Number(document.getElementById('defMarginValue').value)||0;
+    const { error } = await sb.from('settings').update({ default_margin_type:newType, default_margin_value:newVal }).eq('id',1);
+    if(error){ alert('Erreur réseau, réessayez.'); return; }
+    settings.defaultMarginType = newType; settings.defaultMarginValue = newVal;
+    updateComputeBox();
+    alert('Marge par défaut enregistrée.');
+  };
+  document.getElementById('savePinBtn').onclick = async () => {
+    const val = document.getElementById('newPin').value.trim();
+    if(!val) return;
+    const { error } = await sb.from('settings').update({ pin: val }).eq('id',1);
+    if(error){ alert('Erreur réseau, réessayez.'); return; }
+    settings.pin = val;
+    document.getElementById('newPin').value='';
+    alert('Code mis à jour.');
+  };
+  document.getElementById('resetAllBtn').onclick = async () => {
+    if(confirm('Cette action supprimera toutes les données du projet, pour tout le monde. Continuer ?')){
+      const NIL = '00000000-0000-0000-0000-000000000000';
+      await Promise.all([
+        sb.from('orders').delete().neq('id', NIL),
+        sb.from('articles').delete().neq('id', NIL),
+        sb.from('agents').delete().neq('id', NIL)
+      ]);
+      await sb.from('settings').update({ pin:'0000', default_margin_type:'percent', default_margin_value:30 }).eq('id',1);
+      articles = []; agents = []; orders = [];
+      settings = { pin: '0000', defaultMarginType: 'percent', defaultMarginValue: 30 };
+      renderAdmin(); renderMarket();
+      alert('Données réinitialisées.');
+    }
+  };
+
+  // ---------- INSTALLATION (PWA) ----------
+  let deferredInstallPrompt = null;
+  const installBtn = document.getElementById('installBtn');
+  const isIos = /iphone|ipad|ipod/i.test(navigator.userAgent);
+  const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+
+  window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault();
+    deferredInstallPrompt = e;
+    if(!isStandalone) installBtn.classList.remove('hidden');
+  });
+
+  if(isIos && !isStandalone) installBtn.classList.remove('hidden');
+
+  installBtn.onclick = async () => {
+    if(deferredInstallPrompt){
+      deferredInstallPrompt.prompt();
+      await deferredInstallPrompt.userChoice;
+      deferredInstallPrompt = null;
+      installBtn.classList.add('hidden');
+      return;
+    }
+    if(isIos){
+      const root = document.getElementById('modalRoot');
+      root.innerHTML = `
+        <div class="modal-bg" id="iosModalBg">
+          <div class="modal">
+            <h3>Installer sur iPhone</h3>
+            <p>1. Appuyez sur l'icône <strong>Partager</strong> (le carré avec une flèche) en bas de Safari.<br>2. Choisissez <strong>"Sur l'écran d'accueil"</strong>.<br>3. Confirmez — l'icône apparaît comme une vraie application.</p>
+            <div class="modal-actions"><button class="primary-btn" id="closeIosModal" style="width:100%;">Compris</button></div>
+          </div>
+        </div>`;
+      document.getElementById('closeIosModal').onclick = () => root.innerHTML = '';
+      document.getElementById('iosModalBg').onclick = (e) => { if(e.target.id === 'iosModalBg') root.innerHTML = ''; };
+      return;
+    }
+    alert('Depuis le menu de votre navigateur, choisissez "Ajouter à l\'écran d\'accueil" ou "Installer l\'application".');
+  };
+
+  // ---------- TEMPS RÉEL ----------
+  function subscribeRealtime(){
+    sb.channel('realtime-articles').on('postgres_changes', { event:'*', schema:'public', table:'articles' }, async () => {
+      const { data } = await sb.from('articles').select('*').order('created_at');
+      articles = (data||[]).map(articleFromDb);
+      refreshAllViews();
+    }).subscribe();
+    sb.channel('realtime-agents').on('postgres_changes', { event:'*', schema:'public', table:'agents' }, async () => {
+      const { data } = await sb.from('agents').select('*').order('created_at');
+      agents = (data||[]).map(agentFromDb);
+      refreshAllViews();
+    }).subscribe();
+    sb.channel('realtime-orders').on('postgres_changes', { event:'*', schema:'public', table:'orders' }, async () => {
+      const { data } = await sb.from('orders').select('*').order('sold_at');
+      orders = (data||[]).map(orderFromDb);
+      refreshAllViews();
+    }).subscribe();
+    sb.channel('realtime-settings').on('postgres_changes', { event:'*', schema:'public', table:'settings' }, async () => {
+      const { data } = await sb.from('settings').select('*').eq('id',1).maybeSingle();
+      if(data) settings = settingsFromDb(data);
+    }).subscribe();
+  }
+
+  // ---------- INIT ----------
+  try{
+    await loadAll();
+  }catch(e){
+    document.getElementById('loadingOverlay').innerHTML = 'Connexion à la base de données impossible. Vérifiez votre connexion internet, puis rechargez la page.';
+    return;
+  }
+  renderPhotoPreview();
+  updateComputeBox();
+  renderMarket();
+  subscribeRealtime();
+  document.getElementById('loadingOverlay').classList.add('hidden');
+})();
+</script>
+</body>
+</html>
