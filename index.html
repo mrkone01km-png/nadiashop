@@ -181,7 +181,7 @@
     <div class="market-hero">
       <div>
         <h2 style="font-size:26px;">Articles disponibles</h2>
-        <p>Sélection trouvée en boutique, prête à livrer. Prix tout compris, livraison incluse.</p>
+        <p>Sélection trouvée en boutique, prête à livrer.</p>
       </div>
     </div>
     <div id="marketGrid" class="market-grid"></div>
@@ -195,7 +195,7 @@
       <p class="note">Entrez votre code d'accès.</p>
       <input type="text" id="pinInput" placeholder="••••">
       <div><button class="primary-btn" id="unlockBtn" style="width:100%;">Entrer</button></div>
-      <p class="note">Code admin par défaut : 0000 — modifiable dans Réglages. Agents : utilisez le code personnel fourni par l'administrateur.</p>
+      <p class="note">Agents : utilisez le code personnel fourni par l'administrateur.</p>
     </div>
 
     <div id="adminInner" class="hidden">
@@ -216,6 +216,10 @@
           <!-- DASHBOARD -->
           <div id="tab-dashboard" class="admin-tab-content">
             <div class="stat-grid" id="statGrid"></div>
+            <div class="panel">
+              <h2>Ventes par catégorie</h2>
+              <div id="dashCategoryList"></div>
+            </div>
             <div class="panel">
               <h2>Commissions à verser par agent</h2>
               <div id="dashAgentList"></div>
@@ -331,10 +335,13 @@
           <!-- ARTICLES -->
           <div id="tab-articles" class="admin-tab-content hidden">
             <div class="panel">
-              <div class="tabs-row">
-                <button class="art-filter active" data-filter="all">Tous</button>
-                <button class="art-filter" data-filter="available">Disponibles</button>
-                <button class="art-filter" data-filter="empty">Épuisés</button>
+              <div class="tabs-row" style="justify-content:space-between; flex-wrap:wrap;">
+                <div class="tabs-row" style="margin:0;">
+                  <button class="art-filter active" data-filter="all">Tous</button>
+                  <button class="art-filter" data-filter="available">Disponibles</button>
+                  <button class="art-filter" data-filter="empty">Épuisés</button>
+                </div>
+                <button class="small-btn danger" id="clearArticlesBtn">Vider tous les articles</button>
               </div>
               <div style="overflow-x:auto;">
                 <table>
@@ -355,10 +362,13 @@
             <div class="panel">
               <h2>Commandes reçues</h2>
               <p class="note" style="margin-bottom:14px;">Coordonnées des clients pour les joindre et organiser la livraison. Une commande annulée remet l'article en stock.</p>
-              <div class="tabs-row">
-                <button class="order-filter active" data-filter="all">Toutes</button>
-                <button class="order-filter" data-filter="valid">Valides</button>
-                <button class="order-filter" data-filter="cancelled">Annulées</button>
+              <div class="tabs-row" style="justify-content:space-between; flex-wrap:wrap;">
+                <div class="tabs-row" style="margin:0;">
+                  <button class="order-filter active" data-filter="all">Toutes</button>
+                  <button class="order-filter" data-filter="valid">Valides</button>
+                  <button class="order-filter" data-filter="cancelled">Annulées</button>
+                </div>
+                <button class="small-btn danger" id="clearOrdersBtn">Vider toutes les commandes</button>
               </div>
               <div style="overflow-x:auto;">
                 <table>
@@ -392,7 +402,10 @@
               </div>
             </div>
             <div class="panel">
-              <h2>Agents enregistrés</h2>
+              <h2 style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
+                Agents enregistrés
+                <button class="small-btn danger" id="clearAgentsBtn" style="font-family:var(--font-body); font-weight:600;">Vider tous les agents</button>
+              </h2>
               <div id="agentList"></div>
             </div>
           </div>
@@ -469,7 +482,7 @@
     return { id: r.id, name: r.name, phone: r.phone || '', commissionPct: Number(r.commission_pct)||0, paidOut: Number(r.paid_out)||0, code: r.code };
   }
   function orderFromDb(r){
-    return { id:r.id, articleId:r.article_id, articleName:r.article_name, photo:r.photo, price:Number(r.price)||0,
+    return { id:r.id, articleId:r.article_id, articleName:r.article_name, category:r.category||'', photo:r.photo, price:Number(r.price)||0,
       margin:Number(r.margin)||0, agentId:r.agent_id, agentName:r.agent_name, commissionPct:Number(r.commission_pct)||0,
       commission:Number(r.commission)||0, buyerName:r.buyer_name||'', buyerPhone:r.buyer_phone||'', status:r.status,
       manual:r.manual, soldAt:r.sold_at, cancelledAt:r.cancelled_at };
@@ -530,7 +543,7 @@
     const commissionPct = agent ? (Number(agent.commissionPct)||0) : 0;
     const commission = article.margin * commissionPct / 100;
     const orderPayload = {
-      article_id: article.id, article_name: article.name,
+      article_id: article.id, article_name: article.name, category: article.category || null,
       photo: (article.photos && article.photos[0]) || null,
       price: article.final, margin: article.margin,
       agent_id: article.agentId || null, agent_name: agent ? agent.name : null,
@@ -864,6 +877,16 @@
     };
   });
 
+  document.getElementById('clearArticlesBtn').onclick = async () => {
+    if(!confirm('Supprimer définitivement tous les articles de la boutique ? Les commandes déjà passées resteront dans l\'historique.')) return;
+    const NIL = '00000000-0000-0000-0000-000000000000';
+    const { error } = await sb.from('articles').delete().neq('id', NIL);
+    if(error){ alert('Erreur réseau, réessayez.'); return; }
+    articles = [];
+    renderArticlesTable(); renderDashboard(); renderMarket(); renderAgentDash();
+    alert('Articles supprimés.');
+  };
+
   function renderArticlesTable(){
     const tbody = document.getElementById('articlesTableBody');
     let list = articles.slice().reverse();
@@ -1022,6 +1045,16 @@
     renderOrders(); renderArticlesTable(); renderDashboard(); renderAgentDash();
   }
 
+  document.getElementById('clearOrdersBtn').onclick = async () => {
+    if(!confirm('Supprimer définitivement toutes les commandes (valides et annulées) ? Le stock des articles ne sera pas remis automatiquement.')) return;
+    const NIL = '00000000-0000-0000-0000-000000000000';
+    const { error } = await sb.from('orders').delete().neq('id', NIL);
+    if(error){ alert('Erreur réseau, réessayez.'); return; }
+    orders = [];
+    renderOrders(); renderDashboard(); renderAgentDash();
+    alert('Commandes supprimées.');
+  };
+
   function renderOrders(){
     const tbody = document.getElementById('ordersTableBody');
     let list = orders.slice().reverse();
@@ -1113,6 +1146,17 @@
     alert(`Agent ajouté. Son code d'accès personnel est : ${code}\nCommuniquez-lui ce code pour qu'il puisse ajouter des articles et suivre ses gains.`);
   };
 
+  document.getElementById('clearAgentsBtn').onclick = async () => {
+    if(!confirm('Supprimer définitivement tous les agents ? Les articles liés resteront mais sans agent associé.')) return;
+    const NIL = '00000000-0000-0000-0000-000000000000';
+    const { error } = await sb.from('agents').delete().neq('id', NIL);
+    if(error){ alert('Erreur réseau, réessayez.'); return; }
+    agents = [];
+    articles.forEach(a => { a.agentId = null; });
+    renderAgents(); refreshAgentSelect(); renderArticlesTable(); renderDashboard();
+    alert('Agents supprimés.');
+  };
+
   function renderAgents(){
     const list = document.getElementById('agentList');
     if(agents.length === 0){
@@ -1191,6 +1235,26 @@
       <div class="stat-card"><div class="label">Commissions dues (cumul)</div><div class="value">${FCFA(totalCommissions)}</div></div>
       <div class="stat-card"><div class="label">Marge nette totale (ce qui reste en caisse)</div><div class="value">${FCFA(netProfit)}</div></div>
     `;
+
+    const dashCategoryList = document.getElementById('dashCategoryList');
+    const catMap = {};
+    validOrders.forEach(o => {
+      const cat = o.category || 'Non catégorisé';
+      if(!catMap[cat]) catMap[cat] = { units:0, revenue:0 };
+      catMap[cat].units += 1;
+      catMap[cat].revenue += o.price;
+    });
+    const catEntries = Object.entries(catMap).sort((a,b) => b[1].units - a[1].units);
+    if(catEntries.length === 0){
+      dashCategoryList.innerHTML = '<p class="note">Pas encore de ventes pour établir une répartition par catégorie.</p>';
+    } else {
+      dashCategoryList.innerHTML = catEntries.map(([cat, stats]) => `
+        <div class="agent-card">
+          <div><div class="name">${escapeHtml(cat)}</div><div class="meta">${stats.units} vente(s)</div></div>
+          <div class="agent-money"><div><div class="meta">Chiffre d'affaires</div><div class="amt">${FCFA(stats.revenue)}</div></div></div>
+        </div>
+      `).join('');
+    }
 
     const dashAgentList = document.getElementById('dashAgentList');
     if(agents.length === 0){
@@ -1299,7 +1363,12 @@
       } else {
         const fresh = articleFromDb(payload.new);
         const idx = articles.findIndex(a => a.id === fresh.id);
-        if(idx >= 0) articles[idx] = fresh; else articles.push(fresh);
+        if(idx >= 0){
+          if(!fresh.photos.length && articles[idx].photos.length) fresh.photos = articles[idx].photos;
+          articles[idx] = fresh;
+        } else {
+          articles.push(fresh);
+        }
       }
       refreshAllViews();
     }).subscribe();
