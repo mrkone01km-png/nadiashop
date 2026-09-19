@@ -183,6 +183,7 @@
         <h2 style="font-size:26px;">Articles disponibles</h2>
         <p>Sélection trouvée en boutique, prête à livrer.</p>
       </div>
+      <input type="text" id="marketSearch" placeholder="Rechercher un article ou une catégorie…" style="max-width:280px;">
     </div>
     <div id="marketGrid" class="market-grid"></div>
   </div>
@@ -193,7 +194,7 @@
     <div id="lockScreen" class="lock-screen">
       <h2 style="font-size:19px;">Espace admin & agents</h2>
       <p class="note">Entrez votre code d'accès.</p>
-      <input type="text" id="pinInput" placeholder="••••">
+      <input type="text" id="pinInput" placeholder="•••••">
       <div><button class="primary-btn" id="unlockBtn" style="width:100%;">Entrer</button></div>
       <p class="note">Agents : utilisez le code personnel fourni par l'administrateur.</p>
     </div>
@@ -215,6 +216,7 @@
 
           <!-- DASHBOARD -->
           <div id="tab-dashboard" class="admin-tab-content">
+            <div class="stat-grid" id="visitStatGrid"></div>
             <div class="stat-grid" id="statGrid"></div>
             <div class="panel">
               <h2>Ventes par catégorie</h2>
@@ -255,6 +257,7 @@
                     <option value="Meubles">Meubles</option>
                     <option value="Bébé & Enfants">Bébé & Enfants</option>
                     <option value="Sport & Loisirs">Sport & Loisirs</option>
+                    <option value="Fournitures & équipements scolaires">Fournitures & équipements scolaires</option>
                     <option value="Autres">Autres</option>
                   </select>
                 </div>
@@ -316,6 +319,9 @@
 
           <!-- AGENT DASHBOARD -->
           <div id="tab-agentdash" class="admin-tab-content hidden">
+            <div style="display:flex; justify-content:flex-end; margin-bottom:10px;">
+              <button class="ghost-btn" id="refreshAgentStatsBtn">Actualiser mes stats</button>
+            </div>
             <div class="stat-grid" id="agentDashStats"></div>
             <div class="panel">
               <h2>Mes magasins</h2>
@@ -341,12 +347,17 @@
                   <button class="art-filter" data-filter="available">Disponibles</button>
                   <button class="art-filter" data-filter="empty">Épuisés</button>
                 </div>
-                <button class="small-btn danger" id="clearArticlesBtn">Vider tous les articles</button>
+                <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
+                  <input type="text" id="articleSearch" placeholder="Rechercher…" style="max-width:180px;">
+                  <button class="small-btn danger hidden" id="deleteSelectedArticlesBtn">Supprimer la sélection (0)</button>
+                  <button class="small-btn danger" id="clearArticlesBtn">Vider tous les articles</button>
+                </div>
               </div>
               <div style="overflow-x:auto;">
                 <table>
                   <thead>
                     <tr>
+                      <th><input type="checkbox" id="selectAllArticles"></th>
                       <th></th><th>Article</th><th>Catégorie</th><th>Magasin / Gérant</th><th>Prix achat</th><th>Marge</th><th>Livraison</th>
                       <th>Prix vente</th><th>Agent</th><th>Commission</th><th>Marge nette</th><th>Stock</th><th>Vendus</th><th>Actions</th>
                     </tr>
@@ -368,11 +379,15 @@
                   <button class="order-filter" data-filter="valid">Valides</button>
                   <button class="order-filter" data-filter="cancelled">Annulées</button>
                 </div>
-                <button class="small-btn danger" id="clearOrdersBtn">Vider toutes les commandes</button>
+                <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
+                  <input type="text" id="orderSearch" placeholder="Rechercher…" style="max-width:180px;">
+                  <button class="small-btn danger hidden" id="deleteSelectedOrdersBtn">Supprimer la sélection (0)</button>
+                  <button class="small-btn danger" id="clearOrdersBtn">Vider toutes les commandes</button>
+                </div>
               </div>
               <div style="overflow-x:auto;">
                 <table>
-                  <thead><tr><th></th><th>Article</th><th>Prix</th><th>Client</th><th>Téléphone</th><th>Date</th><th>Statut</th><th>Actions</th></tr></thead>
+                  <thead><tr><th><input type="checkbox" id="selectAllOrders"></th><th></th><th>Article</th><th>Prix</th><th>Client</th><th>Téléphone</th><th>Date</th><th>Statut</th><th>Actions</th></tr></thead>
                   <tbody id="ordersTableBody"></tbody>
                 </table>
               </div>
@@ -404,7 +419,11 @@
             <div class="panel">
               <h2 style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
                 Agents enregistrés
-                <button class="small-btn danger" id="clearAgentsBtn" style="font-family:var(--font-body); font-weight:600;">Vider tous les agents</button>
+                <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
+                  <input type="text" id="agentSearch" placeholder="Rechercher…" style="max-width:160px; font-family:var(--font-body); font-weight:400;">
+                  <button class="small-btn danger hidden" id="deleteSelectedAgentsBtn" style="font-family:var(--font-body); font-weight:600;">Supprimer la sélection (0)</button>
+                  <button class="small-btn danger" id="clearAgentsBtn" style="font-family:var(--font-body); font-weight:600;">Vider tous les agents</button>
+                </div>
               </h2>
               <div id="agentList"></div>
             </div>
@@ -468,6 +487,14 @@
   const SUPABASE_KEY = 'sb_publishable_g5JBCWWlW9fkmse3doyB5g_sErktsUP';
   const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
+  const CATEGORY_OPTIONS = ['Mode & Vêtements','Chaussures','Sacs & Maroquinerie','Bijoux & Accessoires',
+    'Beauté & Cosmétiques','Électronique & Téléphonie','Maison & Décoration','Cuisine & Électroménager',
+    'Meubles','Bébé & Enfants','Sport & Loisirs','Fournitures & équipements scolaires','Autres'];
+
+  function escapeHtml(s){
+    return String(s||'').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  }
+
   // ---------- DB <-> JS mapping ----------
   function articleFromDb(r){
     return {
@@ -494,34 +521,36 @@
   let articles = [];
   let agents = [];
   let orders = [];
-  let settings = { pin: '0000', defaultMarginType: 'percent', defaultMarginValue: 30 };
+  let settings = { pin: null, defaultMarginType: 'percent', defaultMarginValue: 30 };
   let currentRole = null;
   let currentAgentId = null;
+  let adminPin = null;
+  let agentCode = null;
+  let currentAgentInfo = null;
+  let visitStats = null;
 
-  async function loadAll(){
-    const [agentsRes, articlesRes, ordersRes, settingsRes] = await Promise.all([
-      sb.from('agents').select('*').order('created_at'),
-      sb.from('articles').select('*').order('created_at'),
-      sb.from('orders').select('*').order('sold_at'),
-      sb.from('settings').select('*').eq('id', 1).maybeSingle()
+  let selectedArticleIds = new Set();
+  let selectedOrderIds = new Set();
+  let selectedAgentIds = new Set();
+
+  async function loadPublicArticles(){
+    const { data, error } = await sb.from('articles').select('*').order('created_at');
+    if(error) throw error;
+    articles = (data||[]).map(articleFromDb);
+  }
+
+  async function loadAdminData(){
+    const [agentsRes, ordersRes, visitRes] = await Promise.all([
+      sb.rpc('admin_list_agents', { p_pin: adminPin }),
+      sb.rpc('admin_list_orders', { p_pin: adminPin }),
+      sb.rpc('admin_get_visit_stats', { p_pin: adminPin })
     ]);
-    if(agentsRes.error || articlesRes.error || ordersRes.error || settingsRes.error){
-      throw (agentsRes.error || articlesRes.error || ordersRes.error || settingsRes.error);
-    }
     agents = (agentsRes.data||[]).map(agentFromDb);
-    articles = (articlesRes.data||[]).map(articleFromDb);
     orders = (ordersRes.data||[]).map(orderFromDb);
-    settings = settingsRes.data ? settingsFromDb(settingsRes.data) : { pin:'0000', defaultMarginType:'percent', defaultMarginValue:30 };
+    visitStats = visitRes.data || null;
   }
 
   function agentById(id){ return agents.find(a => a.id === id); }
-
-  function generateAgentCode(){
-    let code;
-    do{ code = String(Math.floor(1000 + Math.random()*9000)); }
-    while(agents.some(a => a.code === code) || code === settings.pin);
-    return code;
-  }
 
   function computeFinalPrice(storePrice, marginType, marginVal, delivery){
     storePrice = Number(storePrice)||0; marginVal = Number(marginVal)||0; delivery = Number(delivery)||0;
@@ -537,38 +566,36 @@
   }
   function currentNetMarginPerUnit(article){ return article.margin - currentCommissionPerUnit(article); }
 
-  async function sellOneUnit(article, buyerName, buyerPhone, manual){
-    if(!article || article.remaining <= 0) return false;
-    const agent = article.agentId ? agentById(article.agentId) : null;
-    const commissionPct = agent ? (Number(agent.commissionPct)||0) : 0;
-    const commission = article.margin * commissionPct / 100;
-    const orderPayload = {
-      article_id: article.id, article_name: article.name, category: article.category || null,
-      photo: (article.photos && article.photos[0]) || null,
-      price: article.final, margin: article.margin,
-      agent_id: article.agentId || null, agent_name: agent ? agent.name : null,
-      commission_pct: commissionPct, commission,
-      buyer_name: buyerName || (manual ? 'Vente enregistrée par l\'admin' : ''),
-      buyer_phone: buyerPhone || '', status: 'valid', manual: !!manual
-    };
-    const { data: orderData, error: orderErr } = await sb.from('orders').insert(orderPayload).select().single();
-    if(orderErr){ alert('Connexion impossible, réessayez.'); return false; }
-    const newRemaining = article.remaining - 1;
-    const { error: artErr } = await sb.from('articles').update({ remaining: newRemaining }).eq('id', article.id);
-    if(artErr){ alert('Connexion impossible, réessayez.'); return false; }
-    article.remaining = newRemaining;
-    orders.push(orderFromDb(orderData));
-    return true;
-  }
-
   function agentStats(agentId){
     const mine = orders.filter(o => o.agentId === agentId && o.status !== 'cancelled');
     const totalDue = mine.reduce((s,o) => s + o.commission, 0);
     return { totalDue, soldCount: mine.length };
   }
 
-  function escapeHtml(s){
-    return String(s||'').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  // ---------- COMPRESSION DES PHOTOS ----------
+  function compressImage(file, maxDim, quality){
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => {
+        const img = new Image();
+        img.onload = () => {
+          let { width, height } = img;
+          if(width > maxDim || height > maxDim){
+            if(width > height){ height = Math.round(height * maxDim / width); width = maxDim; }
+            else { width = Math.round(width * maxDim / height); height = maxDim; }
+          }
+          const canvas = document.createElement('canvas');
+          canvas.width = width; canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, width, height);
+          resolve(canvas.toDataURL('image/jpeg', quality));
+        };
+        img.onerror = reject;
+        img.src = reader.result;
+      };
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
   }
 
   // ---------- NAV ----------
@@ -591,22 +618,34 @@
   // ---------- LOCK SCREEN ----------
   const lockScreen = document.getElementById('lockScreen');
   const adminInner = document.getElementById('adminInner');
-  document.getElementById('unlockBtn').onclick = () => {
+  document.getElementById('unlockBtn').onclick = async () => {
     const val = document.getElementById('pinInput').value.trim();
-    if(val === settings.pin){
-      currentRole = 'admin'; currentAgentId = null;
-      lockScreen.classList.add('hidden'); adminInner.classList.remove('hidden');
-      applyRoleVisibility(); renderAdmin();
-      return;
+    if(!val) return;
+    const unlockBtn = document.getElementById('unlockBtn'); unlockBtn.disabled = true;
+    try{
+      const { data: settingsRows } = await sb.rpc('admin_get_settings', { p_pin: val });
+      if(settingsRows && settingsRows.length){
+        currentRole = 'admin'; currentAgentId = null; adminPin = val;
+        settings = settingsFromDb(settingsRows[0]);
+        lockScreen.classList.add('hidden'); adminInner.classList.remove('hidden');
+        applyRoleVisibility();
+        await loadAdminData();
+        renderAdmin();
+        return;
+      }
+      const { data: agentData } = await sb.rpc('get_agent_stats', { p_code: val });
+      if(agentData){
+        currentRole = 'agent'; currentAgentId = agentData.agent_id; agentCode = val;
+        currentAgentInfo = agentData;
+        lockScreen.classList.add('hidden'); adminInner.classList.remove('hidden');
+        applyRoleVisibility();
+        renderAdmin();
+        return;
+      }
+      document.getElementById('pinInput').style.borderColor = 'var(--danger)';
+    } finally {
+      unlockBtn.disabled = false;
     }
-    const agent = agents.find(a => a.code === val);
-    if(agent){
-      currentRole = 'agent'; currentAgentId = agent.id;
-      lockScreen.classList.add('hidden'); adminInner.classList.remove('hidden');
-      applyRoleVisibility(); renderAdmin();
-      return;
-    }
-    document.getElementById('pinInput').style.borderColor = 'var(--danger)';
   };
 
   function applyRoleVisibility(){
@@ -630,19 +669,31 @@
   }
 
   document.getElementById('logoutBtn').onclick = () => {
-    currentRole = null; currentAgentId = null;
+    currentRole = null; currentAgentId = null; adminPin = null; agentCode = null; currentAgentInfo = null;
     document.getElementById('pinInput').value = '';
     document.getElementById('pinInput').style.borderColor = '';
     adminInner.classList.add('hidden'); lockScreen.classList.remove('hidden');
   };
 
   // ---------- ADMIN TABS ----------
+  async function refreshAdminOrdersAndAgents(){
+    const [ordersRes, agentsRes] = await Promise.all([
+      sb.rpc('admin_list_orders', { p_pin: adminPin }),
+      sb.rpc('admin_list_agents', { p_pin: adminPin })
+    ]);
+    if(!ordersRes.error) orders = (ordersRes.data||[]).map(orderFromDb);
+    if(!agentsRes.error) agents = (agentsRes.data||[]).map(agentFromDb);
+  }
+
   document.querySelectorAll('.admin-tab').forEach(btn => {
-    btn.onclick = () => {
+    btn.onclick = async () => {
       document.querySelectorAll('.admin-tab').forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
       document.querySelectorAll('.admin-tab-content').forEach(c => c.classList.add('hidden'));
       document.getElementById('tab-' + btn.dataset.tab).classList.remove('hidden');
+      if(currentRole === 'admin' && ['dashboard','commandes','agents'].includes(btn.dataset.tab)){
+        await refreshAdminOrdersAndAgents();
+      }
       if(btn.dataset.tab === 'dashboard') renderDashboard();
       if(btn.dataset.tab === 'articles') renderArticlesTable();
       if(btn.dataset.tab === 'commandes') renderOrders();
@@ -653,21 +704,39 @@
   });
 
   function renderAdmin(){
-    renderDashboard(); renderArticlesTable(); renderOrders(); renderAgents();
-    refreshAgentSelect(); initDefaultMarginFields(); updateComputeBox(); renderAgentDash();
+    if(currentRole === 'admin'){
+      renderDashboard(); renderArticlesTable(); renderOrders(); renderAgents();
+      refreshAgentSelect(); initDefaultMarginFields(); renderVisitStats();
+    }
+    updateComputeBox();
+    renderAgentDash();
   }
 
   function refreshAllViews(){
     renderMarket();
-    if(!adminInner.classList.contains('hidden')) renderAdmin();
+    if(!adminInner.classList.contains('hidden')){
+      if(currentRole === 'admin'){ renderArticlesTable(); renderDashboard(); }
+      renderAgentDash();
+    }
   }
 
   // ---------- MARKETPLACE RENDER ----------
+  const marketSearchEl = document.getElementById('marketSearch');
+  marketSearchEl.addEventListener('input', renderMarket);
+
   function renderMarket(){
     const grid = document.getElementById('marketGrid');
-    const inStock = articles.filter(a => a.remaining > 0);
+    const searchVal = marketSearchEl.value.trim().toLowerCase();
+    let inStock = articles.filter(a => a.remaining > 0);
+    if(searchVal){
+      inStock = inStock.filter(a =>
+        (a.name||'').toLowerCase().includes(searchVal) ||
+        (a.category||'').toLowerCase().includes(searchVal) ||
+        (a.characteristics||'').toLowerCase().includes(searchVal)
+      );
+    }
     if(inStock.length === 0){
-      grid.innerHTML = '<div class="empty-state" style="grid-column:1/-1;">Aucun article disponible pour le moment. Revenez bientôt.</div>';
+      grid.innerHTML = `<div class="empty-state" style="grid-column:1/-1;">${searchVal ? 'Aucun résultat pour cette recherche.' : 'Aucun article disponible pour le moment. Revenez bientôt.'}</div>`;
       return;
     }
     grid.innerHTML = inStock.map(a => {
@@ -727,8 +796,13 @@
       const confirmBtn = document.getElementById('confirmOrd'); confirmBtn.disabled = true;
       const buyerName = document.getElementById('ordName').value.trim();
       const buyerPhone = document.getElementById('ordPhone').value.trim();
-      const ok = await sellOneUnit(article, buyerName, buyerPhone, false);
-      if(!ok){ root.innerHTML=''; renderMarket(); alert('Désolé, cet article vient d\'être épuisé.'); return; }
+      const { data, error } = await sb.rpc('place_order_public', { p_article_id: article.id, p_buyer_name: buyerName, p_buyer_phone: buyerPhone });
+      if(error || !data || !data.ok){
+        root.innerHTML=''; renderMarket();
+        alert('Désolé, cet article vient d\'être épuisé.');
+        return;
+      }
+      article.remaining = data.remaining;
       root.innerHTML = `
         <div class="modal-bg" id="modalBg2">
           <div class="modal" style="text-align:center;">
@@ -752,17 +826,12 @@
       btn.onclick = () => { uploadedPhotos.splice(Number(btn.dataset.idx),1); renderPhotoPreview(); };
     });
   }
-  function addPhotosFromFiles(fileList){
+  async function addPhotosFromFiles(fileList){
     if(uploadedPhotos.length >= 3){ alert('Maximum 3 photos par article.'); return; }
     const files = Array.from(fileList).slice(0, 3 - uploadedPhotos.length);
-    Promise.all(files.map(f => new Promise(resolve => {
-      const reader = new FileReader();
-      reader.onload = () => resolve(reader.result);
-      reader.readAsDataURL(f);
-    }))).then(results => {
-      uploadedPhotos = uploadedPhotos.concat(results).slice(0,3);
-      renderPhotoPreview();
-    });
+    const compressed = await Promise.all(files.map(f => compressImage(f, 1000, 0.72)));
+    uploadedPhotos = uploadedPhotos.concat(compressed).slice(0,3);
+    renderPhotoPreview();
   }
   document.getElementById('artPhotoGallery').onchange = (e) => { addPhotosFromFiles(e.target.files); e.target.value=''; };
   document.getElementById('artPhotoCamera').onchange = (e) => { addPhotosFromFiles(e.target.files); e.target.value=''; };
@@ -792,21 +861,16 @@
   document.getElementById('artAgent').addEventListener('change', updateComputeBox);
 
   function updateComputeBox(){
+    if(currentRole !== 'admin') return;
     const storePrice = document.getElementById('artStorePrice').value;
     const delivery = document.getElementById('artDelivery').value;
-    let marginType, marginVal;
-    if(currentRole === 'admin'){
-      const checked = document.querySelector('input[name=marginType]:checked');
-      marginType = checked ? checked.value : settings.defaultMarginType;
-      marginVal = Number(document.getElementById('artMargin').value)||0;
-    } else {
-      marginType = settings.defaultMarginType;
-      marginVal = settings.defaultMarginValue;
-    }
+    const checked = document.querySelector('input[name=marginType]:checked');
+    const marginType = checked ? checked.value : settings.defaultMarginType;
+    const marginVal = Number(document.getElementById('artMargin').value)||0;
     const { margin, final } = computeFinalPrice(storePrice, marginType, marginVal, delivery);
     document.getElementById('computedPrice').textContent = FCFA(final);
     document.getElementById('computedMargin').textContent = FCFA(margin);
-    const agentId = currentRole === 'agent' ? currentAgentId : (document.getElementById('artAgent').value || null);
+    const agentId = document.getElementById('artAgent').value || null;
     let commission = 0;
     if(agentId){ const agent = agentById(agentId); if(agent) commission = margin * (Number(agent.commissionPct)||0) / 100; }
     document.getElementById('computedCommission').textContent = FCFA(commission);
@@ -821,31 +885,31 @@
     const storePrice = Number(document.getElementById('artStorePrice').value)||0;
     const delivery = Number(document.getElementById('artDelivery').value)||0;
     const quantity = Math.max(1, Number(document.getElementById('artQuantity').value)||1);
-    let marginType, marginVal;
-    if(currentRole === 'admin'){
-      marginType = document.querySelector('input[name=marginType]:checked').value;
-      marginVal = Number(document.getElementById('artMargin').value)||0;
-    } else {
-      marginType = settings.defaultMarginType;
-      marginVal = settings.defaultMarginValue;
-    }
-    const agentId = currentRole === 'agent' ? currentAgentId : (document.getElementById('artAgent').value || null);
 
     if(!name){ alert('Merci d\'indiquer le nom de l\'article.'); return; }
 
-    const { margin, final } = computeFinalPrice(storePrice, marginType, marginVal, delivery);
-    const payload = {
-      name, category, characteristics, store_name: storeName, manager_contact: managerContact,
-      store_price: storePrice, delivery,
-      margin_type: marginType, margin_val: marginVal, margin, final_price: final,
-      agent_id: agentId, photos: uploadedPhotos.slice(0,3), quantity, remaining: quantity
-    };
-
     const saveBtn = document.getElementById('saveArticleBtn'); saveBtn.disabled = true;
-    const { data, error } = await sb.from('articles').insert(payload).select().single();
+    let result;
+    if(currentRole === 'admin'){
+      const marginType = document.querySelector('input[name=marginType]:checked').value;
+      const marginVal = Number(document.getElementById('artMargin').value)||0;
+      const agentId = document.getElementById('artAgent').value || null;
+      result = await sb.rpc('admin_add_article', {
+        p_pin: adminPin, p_name: name, p_category: category, p_characteristics: characteristics,
+        p_store_name: storeName, p_manager_contact: managerContact, p_store_price: storePrice, p_delivery: delivery,
+        p_margin_type: marginType, p_margin_val: marginVal, p_agent_id: agentId,
+        p_photos: uploadedPhotos.slice(0,3), p_quantity: quantity
+      });
+    } else {
+      result = await sb.rpc('agent_add_article', {
+        p_code: agentCode, p_name: name, p_category: category, p_characteristics: characteristics,
+        p_store_name: storeName, p_manager_contact: managerContact, p_store_price: storePrice, p_delivery: delivery,
+        p_photos: uploadedPhotos.slice(0,3), p_quantity: quantity
+      });
+    }
     saveBtn.disabled = false;
-    if(error){ alert('Impossible d\'ajouter l\'article, vérifiez la connexion et réessayez.'); return; }
-    articles.push(articleFromDb(data));
+    if(result.error){ alert('Impossible d\'ajouter l\'article, vérifiez la connexion et réessayez.'); return; }
+    articles.push(articleFromDb(result.data));
 
     document.getElementById('artCategory').value = '';
     document.getElementById('artName').value = '';
@@ -858,6 +922,7 @@
     uploadedPhotos = []; renderPhotoPreview();
     presetMarginFields();
     renderAgentDash();
+    renderMarket();
 
     if(currentRole === 'admin'){
       document.querySelector('.admin-tab[data-tab="articles"]').click();
@@ -876,13 +941,36 @@
       renderArticlesTable();
     };
   });
+  document.getElementById('articleSearch').addEventListener('input', renderArticlesTable);
 
+  function updateArticleSelectionUI(){
+    const btn = document.getElementById('deleteSelectedArticlesBtn');
+    btn.textContent = `Supprimer la sélection (${selectedArticleIds.size})`;
+    btn.classList.toggle('hidden', selectedArticleIds.size === 0);
+  }
+  document.getElementById('selectAllArticles').onchange = (e) => {
+    const checked = e.target.checked;
+    document.querySelectorAll('.art-select').forEach(cb => {
+      cb.checked = checked;
+      if(checked) selectedArticleIds.add(cb.dataset.id); else selectedArticleIds.delete(cb.dataset.id);
+    });
+    updateArticleSelectionUI();
+  };
+  document.getElementById('deleteSelectedArticlesBtn').onclick = async () => {
+    if(selectedArticleIds.size === 0) return;
+    if(!confirm(`Supprimer les ${selectedArticleIds.size} article(s) sélectionné(s) ?`)) return;
+    const ids = Array.from(selectedArticleIds);
+    const { error } = await sb.rpc('admin_delete_articles', { p_pin: adminPin, p_ids: ids });
+    if(error){ alert('Erreur réseau, réessayez.'); return; }
+    articles = articles.filter(a => !selectedArticleIds.has(a.id));
+    selectedArticleIds.clear();
+    renderArticlesTable(); renderDashboard(); renderMarket();
+  };
   document.getElementById('clearArticlesBtn').onclick = async () => {
     if(!confirm('Supprimer définitivement tous les articles de la boutique ? Les commandes déjà passées resteront dans l\'historique.')) return;
-    const NIL = '00000000-0000-0000-0000-000000000000';
-    const { error } = await sb.from('articles').delete().neq('id', NIL);
+    const { error } = await sb.rpc('admin_clear_articles', { p_pin: adminPin });
     if(error){ alert('Erreur réseau, réessayez.'); return; }
-    articles = [];
+    articles = []; selectedArticleIds.clear();
     renderArticlesTable(); renderDashboard(); renderMarket(); renderAgentDash();
     alert('Articles supprimés.');
   };
@@ -892,9 +980,18 @@
     let list = articles.slice().reverse();
     if(currentFilter === 'available') list = list.filter(a => a.remaining > 0);
     if(currentFilter === 'empty') list = list.filter(a => a.remaining <= 0);
+    const searchVal = document.getElementById('articleSearch').value.trim().toLowerCase();
+    if(searchVal){
+      list = list.filter(a =>
+        (a.name||'').toLowerCase().includes(searchVal) ||
+        (a.category||'').toLowerCase().includes(searchVal) ||
+        (a.storeName||'').toLowerCase().includes(searchVal)
+      );
+    }
 
     if(list.length === 0){
-      tbody.innerHTML = `<tr><td colspan="14" style="color:var(--muted); text-align:center; padding:24px;">Aucun article.</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="15" style="color:var(--muted); text-align:center; padding:24px;">Aucun article.</td></tr>`;
+      updateArticleSelectionUI();
       return;
     }
 
@@ -905,6 +1002,7 @@
       const sold = a.quantity - a.remaining;
       return `
         <tr>
+          <td><input type="checkbox" class="art-select" data-id="${a.id}" ${selectedArticleIds.has(a.id)?'checked':''}></td>
           <td>${a.photos && a.photos[0] ? `<img class="thumb" src="${a.photos[0]}">` : ''}</td>
           <td>${escapeHtml(a.name)}${a.characteristics ? `<br><span class="note" style="margin:0;">${escapeHtml(a.characteristics)}</span>` : ''}</td>
           <td>${escapeHtml(a.category||'—')}</td>
@@ -921,6 +1019,7 @@
           <td>
             <button class="small-btn success" data-act="sell1" data-id="${a.id}" ${a.remaining<=0?'disabled':''}>Vendre 1</button>
             <button class="small-btn" data-act="addstock" data-id="${a.id}">+ Stock</button>
+            <button class="small-btn" data-act="editArticle" data-id="${a.id}">Modifier</button>
             <button class="small-btn" data-act="editMargin" data-id="${a.id}">Ajuster marge</button>
             <button class="small-btn danger" data-act="delete" data-id="${a.id}">Suppr.</button>
           </td>
@@ -928,32 +1027,53 @@
       `;
     }).join('');
 
+    tbody.querySelectorAll('.art-select').forEach(cb => {
+      cb.onchange = () => {
+        if(cb.checked) selectedArticleIds.add(cb.dataset.id); else selectedArticleIds.delete(cb.dataset.id);
+        updateArticleSelectionUI();
+      };
+    });
+    updateArticleSelectionUI();
+
     tbody.querySelectorAll('button[data-act]').forEach(btn => {
       btn.onclick = async () => {
         const art = articles.find(x => x.id === btn.dataset.id);
         if(!art) return;
         if(btn.dataset.act === 'sell1'){
-          if(art.remaining <= 0){ alert('Stock épuisé pour cet article.'); }
-          else { await sellOneUnit(art, '', '', true); renderArticlesTable(); renderDashboard(); renderOrders(); }
+          if(art.remaining <= 0){ alert('Stock épuisé pour cet article.'); return; }
+          const { data, error } = await sb.rpc('admin_sell_one', { p_pin: adminPin, p_article_id: art.id });
+          if(error || !data || !data.ok){ alert('Vente impossible (stock épuisé ou erreur réseau).'); return; }
+          art.remaining = data.remaining;
+          const agent = art.agentId ? agentById(art.agentId) : null;
+          orders.push({
+            id: data.order_id, articleId: art.id, articleName: art.name, category: art.category,
+            photo: (art.photos && art.photos[0]) || null, price: art.final, margin: art.margin,
+            agentId: art.agentId, agentName: agent ? agent.name : null,
+            commissionPct: agent ? agent.commissionPct : 0, commission: currentCommissionPerUnit(art),
+            buyerName: 'Vente enregistrée par l\'admin', buyerPhone: '', status: 'valid', manual: true,
+            soldAt: new Date().toISOString()
+          });
+          renderArticlesTable(); renderDashboard(); renderOrders();
         }
         if(btn.dataset.act === 'addstock'){
           const n = Number(prompt('Combien d\'unités ajouter au stock ?', '1')) || 0;
           if(n > 0){
-            const newQty = art.quantity + n, newRem = art.remaining + n;
-            const { error } = await sb.from('articles').update({ quantity:newQty, remaining:newRem }).eq('id', art.id);
+            const { data, error } = await sb.rpc('admin_add_stock', { p_pin: adminPin, p_article_id: art.id, p_qty: n });
             if(error){ alert('Erreur réseau, réessayez.'); return; }
-            art.quantity = newQty; art.remaining = newRem;
-            renderArticlesTable(); renderDashboard();
+            Object.assign(art, articleFromDb(data));
+            renderArticlesTable(); renderDashboard(); renderMarket();
           }
         }
         if(btn.dataset.act === 'editMargin'){ openEditMarginModal(art.id); return; }
+        if(btn.dataset.act === 'editArticle'){ openEditArticleModal(art.id); return; }
         if(btn.dataset.act === 'delete'){
           if(confirm('Supprimer cet article ?')){
-            const { error } = await sb.from('articles').delete().eq('id', art.id);
+            const { error } = await sb.rpc('admin_delete_article', { p_pin: adminPin, p_article_id: art.id });
             if(error){ alert('Erreur réseau, réessayez.'); return; }
             articles = articles.filter(x => x.id !== art.id);
+            selectedArticleIds.delete(art.id);
           }
-          renderArticlesTable(); renderDashboard();
+          renderArticlesTable(); renderDashboard(); renderMarket();
         }
       };
     });
@@ -993,12 +1113,91 @@
     document.getElementById('confirmMargin').onclick = async () => {
       const marginType = document.querySelector('input[name=editMarginType]:checked').value;
       const marginVal = Number(document.getElementById('editMarginValue').value)||0;
-      const { margin, final } = computeFinalPrice(article.storePrice, marginType, marginVal, article.delivery);
-      const { error } = await sb.from('articles').update({ margin_type:marginType, margin_val:marginVal, margin, final_price:final }).eq('id', article.id);
+      const { data, error } = await sb.rpc('admin_edit_margin', { p_pin: adminPin, p_article_id: article.id, p_margin_type: marginType, p_margin_val: marginVal });
       if(error){ alert('Erreur réseau, réessayez.'); return; }
-      article.marginType = marginType; article.marginVal = marginVal;
-      article.margin = margin; article.final = final;
-      root.innerHTML = ''; renderArticlesTable(); renderDashboard();
+      Object.assign(article, articleFromDb(data));
+      root.innerHTML = ''; renderArticlesTable(); renderDashboard(); renderMarket();
+    };
+  }
+
+  function openEditArticleModal(articleId){
+    const article = articles.find(a => a.id === articleId);
+    if(!article) return;
+    let editPhotos = article.photos.slice();
+    const root = document.getElementById('modalRoot');
+    root.innerHTML = `
+      <div class="modal-bg" id="editArtModalBg">
+        <div class="modal" style="max-width:480px; max-height:85vh; overflow-y:auto;">
+          <h3>Modifier l'article</h3>
+          <div class="field" style="margin-bottom:10px;">
+            <label>Catégorie</label>
+            <select id="editArtCategory"></select>
+          </div>
+          <div class="field" style="margin-bottom:10px;"><label>Nom</label><input type="text" id="editArtName" value="${escapeHtml(article.name)}"></div>
+          <div class="field" style="margin-bottom:10px;"><label>Caractéristiques</label><input type="text" id="editArtCharacteristics" value="${escapeHtml(article.characteristics)}"></div>
+          <div class="field" style="margin-bottom:10px;"><label>Magasin / lieu d'achat</label><input type="text" id="editArtStore" value="${escapeHtml(article.storeName)}"></div>
+          <div class="field" style="margin-bottom:10px;"><label>Nom du gérant et contact</label><input type="text" id="editArtManagerContact" value="${escapeHtml(article.managerContact)}"></div>
+          <div class="field" style="margin-bottom:10px;"><label>Prix magasin (FCFA)</label><input type="number" id="editArtStorePrice" value="${article.storePrice}"></div>
+          <div class="field" style="margin-bottom:10px;"><label>Frais de livraison (FCFA)</label><input type="number" id="editArtDelivery" value="${article.delivery}"></div>
+          <div class="field" style="margin-bottom:10px;">
+            <label>Photos (jusqu'à 3)</label>
+            <div style="display:flex; gap:10px;">
+              <input type="file" id="editArtPhotoGallery" accept="image/*" multiple style="flex:1;">
+              <input type="file" id="editArtPhotoCamera" accept="image/*" capture="environment" style="flex:1;">
+            </div>
+            <div class="photo-preview" id="editPhotoPreview"></div>
+          </div>
+          <div class="modal-actions">
+            <button class="ghost-btn" id="cancelEditArt">Annuler</button>
+            <button class="primary-btn" id="confirmEditArt">Enregistrer</button>
+          </div>
+        </div>
+      </div>`;
+
+    const catSelect = document.getElementById('editArtCategory');
+    catSelect.innerHTML = '<option value="">— Choisir une catégorie —</option>' +
+      CATEGORY_OPTIONS.map(c => `<option value="${escapeHtml(c)}" ${c===article.category?'selected':''}>${escapeHtml(c)}</option>`).join('');
+
+    function renderEditPreview(){
+      document.getElementById('editPhotoPreview').innerHTML = editPhotos.map((src,i) => `
+        <div class="ph"><img src="${src}"><button type="button" class="rm" data-idx="${i}">×</button></div>
+      `).join('');
+      document.querySelectorAll('#editPhotoPreview .rm').forEach(btn => {
+        btn.onclick = () => { editPhotos.splice(Number(btn.dataset.idx),1); renderEditPreview(); };
+      });
+    }
+    renderEditPreview();
+
+    async function addEditPhotos(fileList){
+      if(editPhotos.length >= 3){ alert('Maximum 3 photos.'); return; }
+      const files = Array.from(fileList).slice(0, 3 - editPhotos.length);
+      const compressed = await Promise.all(files.map(f => compressImage(f, 1000, 0.72)));
+      editPhotos = editPhotos.concat(compressed).slice(0,3);
+      renderEditPreview();
+    }
+    document.getElementById('editArtPhotoGallery').onchange = (e) => { addEditPhotos(e.target.files); e.target.value=''; };
+    document.getElementById('editArtPhotoCamera').onchange = (e) => { addEditPhotos(e.target.files); e.target.value=''; };
+
+    document.getElementById('cancelEditArt').onclick = () => root.innerHTML = '';
+    document.getElementById('editArtModalBg').onclick = (e) => { if(e.target.id === 'editArtModalBg') root.innerHTML = ''; };
+    document.getElementById('confirmEditArt').onclick = async () => {
+      const confirmBtn = document.getElementById('confirmEditArt'); confirmBtn.disabled = true;
+      const { data, error } = await sb.rpc('admin_update_article', {
+        p_pin: adminPin, p_article_id: article.id,
+        p_name: document.getElementById('editArtName').value.trim(),
+        p_category: catSelect.value,
+        p_characteristics: document.getElementById('editArtCharacteristics').value.trim(),
+        p_store_name: document.getElementById('editArtStore').value.trim(),
+        p_manager_contact: document.getElementById('editArtManagerContact').value.trim(),
+        p_store_price: Number(document.getElementById('editArtStorePrice').value)||0,
+        p_delivery: Number(document.getElementById('editArtDelivery').value)||0,
+        p_photos: editPhotos
+      });
+      confirmBtn.disabled = false;
+      if(error){ alert('Erreur réseau, réessayez.'); return; }
+      Object.assign(article, articleFromDb(data));
+      root.innerHTML = '';
+      renderArticlesTable(); renderMarket(); renderDashboard();
     };
   }
 
@@ -1012,62 +1211,84 @@
       renderOrders();
     };
   });
+  document.getElementById('orderSearch').addEventListener('input', renderOrders);
 
-  async function cancelOrder(orderId){
-    const order = orders.find(o => o.id === orderId);
-    if(!order || order.status === 'cancelled') return;
-    const cancelledAt = new Date().toISOString();
-    const { error: orderErr } = await sb.from('orders').update({ status:'cancelled', cancelled_at: cancelledAt }).eq('id', orderId);
-    if(orderErr){ alert('Erreur réseau, réessayez.'); return; }
-    order.status = 'cancelled'; order.cancelledAt = cancelledAt;
-    const article = articles.find(a => a.id === order.articleId);
-    if(article){
-      const newRemaining = Math.min(article.quantity, article.remaining + 1);
-      const { error: artErr } = await sb.from('articles').update({ remaining: newRemaining }).eq('id', article.id);
-      if(!artErr) article.remaining = newRemaining;
-    }
-    renderOrders(); renderArticlesTable(); renderDashboard(); renderAgentDash();
+  function updateOrderSelectionUI(){
+    const btn = document.getElementById('deleteSelectedOrdersBtn');
+    btn.textContent = `Supprimer la sélection (${selectedOrderIds.size})`;
+    btn.classList.toggle('hidden', selectedOrderIds.size === 0);
   }
-
-  async function reactivateOrder(orderId){
-    const order = orders.find(o => o.id === orderId);
-    if(!order || order.status !== 'cancelled') return;
-    const article = articles.find(a => a.id === order.articleId);
-    if(article && article.remaining <= 0){ alert('Stock épuisé, impossible de réactiver cette commande.'); return; }
-    const { error: orderErr } = await sb.from('orders').update({ status:'valid', cancelled_at:null }).eq('id', orderId);
-    if(orderErr){ alert('Erreur réseau, réessayez.'); return; }
-    order.status = 'valid'; delete order.cancelledAt;
-    if(article){
-      const newRemaining = article.remaining - 1;
-      const { error: artErr } = await sb.from('articles').update({ remaining:newRemaining }).eq('id', article.id);
-      if(!artErr) article.remaining = newRemaining;
-    }
-    renderOrders(); renderArticlesTable(); renderDashboard(); renderAgentDash();
-  }
-
+  document.getElementById('selectAllOrders').onchange = (e) => {
+    const checked = e.target.checked;
+    document.querySelectorAll('.order-select').forEach(cb => {
+      cb.checked = checked;
+      if(checked) selectedOrderIds.add(cb.dataset.id); else selectedOrderIds.delete(cb.dataset.id);
+    });
+    updateOrderSelectionUI();
+  };
+  document.getElementById('deleteSelectedOrdersBtn').onclick = async () => {
+    if(selectedOrderIds.size === 0) return;
+    if(!confirm(`Supprimer définitivement les ${selectedOrderIds.size} commande(s) sélectionnée(s) ? Le stock ne sera pas remis automatiquement.`)) return;
+    const ids = Array.from(selectedOrderIds);
+    const { error } = await sb.rpc('admin_delete_orders', { p_pin: adminPin, p_ids: ids });
+    if(error){ alert('Erreur réseau, réessayez.'); return; }
+    orders = orders.filter(o => !selectedOrderIds.has(o.id));
+    selectedOrderIds.clear();
+    renderOrders(); renderDashboard();
+  };
   document.getElementById('clearOrdersBtn').onclick = async () => {
     if(!confirm('Supprimer définitivement toutes les commandes (valides et annulées) ? Le stock des articles ne sera pas remis automatiquement.')) return;
-    const NIL = '00000000-0000-0000-0000-000000000000';
-    const { error } = await sb.from('orders').delete().neq('id', NIL);
+    const { error } = await sb.rpc('admin_clear_orders', { p_pin: adminPin });
     if(error){ alert('Erreur réseau, réessayez.'); return; }
-    orders = [];
+    orders = []; selectedOrderIds.clear();
     renderOrders(); renderDashboard(); renderAgentDash();
     alert('Commandes supprimées.');
   };
+
+  async function cancelOrder(orderId){
+    const { data, error } = await sb.rpc('admin_cancel_order', { p_pin: adminPin, p_order_id: orderId });
+    if(error || !data || !data.ok){ alert('Erreur réseau, réessayez.'); return; }
+    const order = orders.find(o => o.id === orderId);
+    if(order){ order.status = 'cancelled'; order.cancelledAt = new Date().toISOString(); }
+    const art = order ? articles.find(a => a.id === order.articleId) : null;
+    if(art) art.remaining = Math.min(art.quantity, art.remaining + 1);
+    renderOrders(); renderArticlesTable(); renderDashboard(); renderAgentDash(); renderMarket();
+  }
+
+  async function reactivateOrder(orderId){
+    const { data, error } = await sb.rpc('admin_reactivate_order', { p_pin: adminPin, p_order_id: orderId });
+    if(error || !data){ alert('Erreur réseau, réessayez.'); return; }
+    if(!data.ok){ alert(data.reason === 'out_of_stock' ? 'Stock épuisé, impossible de réactiver cette commande.' : 'Action impossible.'); return; }
+    const order = orders.find(o => o.id === orderId);
+    if(order){ order.status = 'valid'; delete order.cancelledAt; }
+    const art = order ? articles.find(a => a.id === order.articleId) : null;
+    if(art) art.remaining -= 1;
+    renderOrders(); renderArticlesTable(); renderDashboard(); renderAgentDash(); renderMarket();
+  }
 
   function renderOrders(){
     const tbody = document.getElementById('ordersTableBody');
     let list = orders.slice().reverse();
     if(orderFilter === 'valid') list = list.filter(o => o.status !== 'cancelled');
     if(orderFilter === 'cancelled') list = list.filter(o => o.status === 'cancelled');
+    const searchVal = document.getElementById('orderSearch').value.trim().toLowerCase();
+    if(searchVal){
+      list = list.filter(o =>
+        (o.articleName||'').toLowerCase().includes(searchVal) ||
+        (o.buyerName||'').toLowerCase().includes(searchVal) ||
+        (o.buyerPhone||'').toLowerCase().includes(searchVal)
+      );
+    }
     if(list.length === 0){
-      tbody.innerHTML = `<tr><td colspan="8" style="color:var(--muted); text-align:center; padding:24px;">Aucune commande.</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="9" style="color:var(--muted); text-align:center; padding:24px;">Aucune commande.</td></tr>`;
+      updateOrderSelectionUI();
       return;
     }
     tbody.innerHTML = list.map(o => {
       const cancelled = o.status === 'cancelled';
       return `
       <tr${cancelled ? ' style="opacity:0.55;"' : ''}>
+        <td><input type="checkbox" class="order-select" data-id="${o.id}" ${selectedOrderIds.has(o.id)?'checked':''}></td>
         <td>${o.photo ? `<img class="thumb" src="${o.photo}">` : ''}</td>
         <td>${escapeHtml(o.articleName)}</td>
         <td>${FCFA(o.price)}</td>
@@ -1082,6 +1303,13 @@
         </td>
       </tr>`;
     }).join('');
+    tbody.querySelectorAll('.order-select').forEach(cb => {
+      cb.onchange = () => {
+        if(cb.checked) selectedOrderIds.add(cb.dataset.id); else selectedOrderIds.delete(cb.dataset.id);
+        updateOrderSelectionUI();
+      };
+    });
+    updateOrderSelectionUI();
     tbody.querySelectorAll('button[data-act]').forEach(btn => {
       btn.onclick = async () => {
         if(btn.dataset.act === 'cancel'){
@@ -1094,20 +1322,18 @@
 
   // ---------- AGENT DASHBOARD ----------
   function renderAgentDash(){
-    if(currentRole !== 'agent' || !currentAgentId) return;
-    const agent = agentById(currentAgentId);
-    if(!agent) return;
-    const stats = agentStats(agent.id);
-    const remaining = Math.max(0, stats.totalDue - (agent.paidOut||0));
-    const myArticles = articles.filter(a => a.agentId === agent.id);
+    if(currentRole !== 'agent' || !currentAgentId || !currentAgentInfo) return;
+    const info = currentAgentInfo;
+    const remaining = Math.max(0, (info.total_commission||0) - (info.paid_out||0));
+    const myArticles = articles.filter(a => a.agentId === currentAgentId);
     const stores = [...new Set(myArticles.map(a => a.storeName).filter(Boolean))];
     const unitsInStock = myArticles.reduce((s,a) => s + a.remaining, 0);
 
     document.getElementById('agentDashStats').innerHTML = `
       <div class="stat-card"><div class="label">Produits enregistrés</div><div class="value">${myArticles.length}</div></div>
       <div class="stat-card"><div class="label">Unités en stock</div><div class="value">${unitsInStock}</div></div>
-      <div class="stat-card"><div class="label">Unités vendues</div><div class="value">${stats.soldCount}</div></div>
-      <div class="stat-card"><div class="label">Déjà payé</div><div class="value">${FCFA(agent.paidOut||0)}</div></div>
+      <div class="stat-card"><div class="label">Unités vendues</div><div class="value">${info.units_sold||0}</div></div>
+      <div class="stat-card"><div class="label">Déjà payé</div><div class="value">${FCFA(info.paid_out||0)}</div></div>
       <div class="stat-card"><div class="label">Reste à me payer</div><div class="value">${FCFA(remaining)}</div></div>
     `;
 
@@ -1129,29 +1355,53 @@
     }
   }
 
+  const refreshAgentStatsBtn = document.getElementById('refreshAgentStatsBtn');
+  if(refreshAgentStatsBtn){
+    refreshAgentStatsBtn.onclick = async () => {
+      const { data } = await sb.rpc('get_agent_stats', { p_code: agentCode });
+      if(data){ currentAgentInfo = data; renderAgentDash(); }
+    };
+  }
+
   // ---------- AGENTS ----------
   document.getElementById('saveAgentBtn').onclick = async () => {
     const name = document.getElementById('agentName').value.trim();
     const phone = document.getElementById('agentPhone').value.trim();
     const pct = Number(document.getElementById('agentCommission').value)||0;
     if(!name){ alert('Merci d\'indiquer le nom de l\'agent.'); return; }
-    const code = generateAgentCode();
-    const { data, error } = await sb.from('agents').insert({ name, phone, commission_pct: pct, paid_out: 0, code }).select().single();
+    const { data, error } = await sb.rpc('admin_add_agent', { p_pin: adminPin, p_name: name, p_phone: phone, p_commission_pct: pct });
     if(error){ alert('Impossible d\'ajouter l\'agent, réessayez.'); return; }
-    agents.push(agentFromDb(data));
+    const agent = agentFromDb(data);
+    agents.push(agent);
     document.getElementById('agentName').value='';
     document.getElementById('agentPhone').value='';
     document.getElementById('agentCommission').value='';
     renderAgents(); refreshAgentSelect();
-    alert(`Agent ajouté. Son code d'accès personnel est : ${code}\nCommuniquez-lui ce code pour qu'il puisse ajouter des articles et suivre ses gains.`);
+    alert(`Agent ajouté. Son code d'accès personnel est : ${agent.code}\nCommuniquez-lui ce code pour qu'il puisse ajouter des articles et suivre ses gains.`);
   };
+  document.getElementById('agentSearch').addEventListener('input', renderAgents);
 
+  function updateAgentSelectionUI(){
+    const btn = document.getElementById('deleteSelectedAgentsBtn');
+    btn.textContent = `Supprimer la sélection (${selectedAgentIds.size})`;
+    btn.classList.toggle('hidden', selectedAgentIds.size === 0);
+  }
+  document.getElementById('deleteSelectedAgentsBtn').onclick = async () => {
+    if(selectedAgentIds.size === 0) return;
+    if(!confirm(`Supprimer les ${selectedAgentIds.size} agent(s) sélectionné(s) ? Leurs articles resteront mais sans agent associé.`)) return;
+    const ids = Array.from(selectedAgentIds);
+    const { error } = await sb.rpc('admin_delete_agents', { p_pin: adminPin, p_ids: ids });
+    if(error){ alert('Erreur réseau, réessayez.'); return; }
+    agents = agents.filter(a => !selectedAgentIds.has(a.id));
+    articles.forEach(a => { if(selectedAgentIds.has(a.agentId)) a.agentId = null; });
+    selectedAgentIds.clear();
+    renderAgents(); refreshAgentSelect(); renderArticlesTable();
+  };
   document.getElementById('clearAgentsBtn').onclick = async () => {
     if(!confirm('Supprimer définitivement tous les agents ? Les articles liés resteront mais sans agent associé.')) return;
-    const NIL = '00000000-0000-0000-0000-000000000000';
-    const { error } = await sb.from('agents').delete().neq('id', NIL);
+    const { error } = await sb.rpc('admin_clear_agents', { p_pin: adminPin });
     if(error){ alert('Erreur réseau, réessayez.'); return; }
-    agents = [];
+    agents = []; selectedAgentIds.clear();
     articles.forEach(a => { a.agentId = null; });
     renderAgents(); refreshAgentSelect(); renderArticlesTable(); renderDashboard();
     alert('Agents supprimés.');
@@ -1159,18 +1409,26 @@
 
   function renderAgents(){
     const list = document.getElementById('agentList');
-    if(agents.length === 0){
-      list.innerHTML = '<p class="note">Aucun agent enregistré pour le moment.</p>';
+    let list_agents = agents.slice();
+    const searchVal = document.getElementById('agentSearch').value.trim().toLowerCase();
+    if(searchVal){
+      list_agents = list_agents.filter(a => (a.name||'').toLowerCase().includes(searchVal) || (a.phone||'').toLowerCase().includes(searchVal));
+    }
+    if(list_agents.length === 0){
+      list.innerHTML = '<p class="note">Aucun agent trouvé.</p>';
     } else {
-      list.innerHTML = agents.map(a => {
+      list.innerHTML = list_agents.map(a => {
         const stats = agentStats(a.id);
         const remaining = Math.max(0, stats.totalDue - (a.paidOut||0));
         return `
           <div class="agent-card">
-            <div>
-              <div class="name">${escapeHtml(a.name)}</div>
-              <div class="meta">${escapeHtml(a.phone||'—')} · ${a.commissionPct}% de la marge · ${stats.soldCount} vente(s)</div>
-              <div class="meta">Code d'accès : <strong style="color:var(--fg); letter-spacing:1px;">${a.code}</strong></div>
+            <div style="display:flex; gap:10px; align-items:flex-start;">
+              <input type="checkbox" class="agent-select" data-id="${a.id}" style="margin-top:4px;" ${selectedAgentIds.has(a.id)?'checked':''}>
+              <div>
+                <div class="name">${escapeHtml(a.name)}</div>
+                <div class="meta">${escapeHtml(a.phone||'—')} · ${a.commissionPct}% de la marge · ${stats.soldCount} vente(s)</div>
+                <div class="meta">Code d'accès : <strong style="color:var(--fg); letter-spacing:1px;">${a.code}</strong></div>
+              </div>
             </div>
             <div class="agent-money">
               <div><div class="meta">Dû total</div><div class="amt">${FCFA(remaining)}</div></div>
@@ -1181,30 +1439,36 @@
           </div>
         `;
       }).join('');
+      list.querySelectorAll('.agent-select').forEach(cb => {
+        cb.onchange = () => {
+          if(cb.checked) selectedAgentIds.add(cb.dataset.id); else selectedAgentIds.delete(cb.dataset.id);
+          updateAgentSelectionUI();
+        };
+      });
       list.querySelectorAll('button[data-act]').forEach(btn => {
         btn.onclick = async () => {
           const agent = agentById(btn.dataset.id);
           if(!agent) return;
           if(btn.dataset.act === 'pay'){
             const stats = agentStats(agent.id);
-            const { error } = await sb.from('agents').update({ paid_out: stats.totalDue }).eq('id', agent.id);
+            const { data, error } = await sb.rpc('admin_mark_agent_paid', { p_pin: adminPin, p_agent_id: agent.id, p_amount: stats.totalDue });
             if(error){ alert('Erreur réseau, réessayez.'); return; }
-            agent.paidOut = stats.totalDue;
+            Object.assign(agent, agentFromDb(data));
             renderAgents(); renderDashboard();
           }
           if(btn.dataset.act === 'regen'){
-            const newCode = generateAgentCode();
-            const { error } = await sb.from('agents').update({ code: newCode }).eq('id', agent.id);
+            const { data, error } = await sb.rpc('admin_regen_agent_code', { p_pin: adminPin, p_agent_id: agent.id });
             if(error){ alert('Erreur réseau, réessayez.'); return; }
-            agent.code = newCode;
+            agent.code = data.code;
             renderAgents();
             alert(`Nouveau code d'accès pour ${agent.name} : ${agent.code}`);
           }
           if(btn.dataset.act === 'delAgent'){
             if(confirm('Supprimer cet agent ? Les articles liés resteront mais sans agent associé.')){
-              const { error } = await sb.from('agents').delete().eq('id', agent.id);
+              const { error } = await sb.rpc('admin_delete_agent', { p_pin: adminPin, p_agent_id: agent.id });
               if(error){ alert('Erreur réseau, réessayez.'); return; }
               agents = agents.filter(x => x.id !== agent.id);
+              selectedAgentIds.delete(agent.id);
               articles.forEach(a => { if(a.agentId === agent.id) a.agentId = null; });
               renderAgents(); refreshAgentSelect(); renderArticlesTable();
             }
@@ -1212,11 +1476,23 @@
         };
       });
     }
+    updateAgentSelectionUI();
     renderDashboard();
   }
 
   // ---------- DASHBOARD ----------
+  function renderVisitStats(){
+    const wrap = document.getElementById('visitStatGrid');
+    if(!visitStats){ wrap.innerHTML = ''; return; }
+    wrap.innerHTML = `
+      <div class="stat-card"><div class="label">Visites totales</div><div class="value">${visitStats.total_visits}</div></div>
+      <div class="stat-card"><div class="label">Visiteurs uniques</div><div class="value">${visitStats.unique_visitors}</div></div>
+      <div class="stat-card"><div class="label">Visites aujourd'hui</div><div class="value">${visitStats.visits_today}</div></div>
+    `;
+  }
+
   function renderDashboard(){
+    if(currentRole !== 'admin') return;
     const totalRemaining = articles.reduce((s,a) => s + a.remaining, 0);
     const productsAvailable = articles.filter(a => a.remaining > 0).length;
     const validOrders = orders.filter(o => o.status !== 'cancelled');
@@ -1285,35 +1561,32 @@
   document.getElementById('saveDefaultMarginBtn').onclick = async () => {
     const newType = document.querySelector('input[name=defMarginType]:checked').value;
     const newVal = Number(document.getElementById('defMarginValue').value)||0;
-    const { error } = await sb.from('settings').update({ default_margin_type:newType, default_margin_value:newVal }).eq('id',1);
+    const { data, error } = await sb.rpc('admin_update_settings', { p_pin: adminPin, p_new_pin: null, p_default_margin_type: newType, p_default_margin_value: newVal });
     if(error){ alert('Erreur réseau, réessayez.'); return; }
-    settings.defaultMarginType = newType; settings.defaultMarginValue = newVal;
+    settings = settingsFromDb(data);
     updateComputeBox();
     alert('Marge par défaut enregistrée.');
   };
   document.getElementById('savePinBtn').onclick = async () => {
     const val = document.getElementById('newPin').value.trim();
     if(!val) return;
-    const { error } = await sb.from('settings').update({ pin: val }).eq('id',1);
+    const { data, error } = await sb.rpc('admin_update_settings', { p_pin: adminPin, p_new_pin: val, p_default_margin_type: null, p_default_margin_value: null });
     if(error){ alert('Erreur réseau, réessayez.'); return; }
-    settings.pin = val;
+    settings = settingsFromDb(data);
+    adminPin = val;
     document.getElementById('newPin').value='';
     alert('Code mis à jour.');
   };
   document.getElementById('resetAllBtn').onclick = async () => {
-    if(confirm('Cette action supprimera toutes les données du projet, pour tout le monde. Continuer ?')){
-      const NIL = '00000000-0000-0000-0000-000000000000';
-      await Promise.all([
-        sb.from('orders').delete().neq('id', NIL),
-        sb.from('articles').delete().neq('id', NIL),
-        sb.from('agents').delete().neq('id', NIL)
-      ]);
-      await sb.from('settings').update({ pin:'0000', default_margin_type:'percent', default_margin_value:30 }).eq('id',1);
-      articles = []; agents = []; orders = [];
-      settings = { pin: '0000', defaultMarginType: 'percent', defaultMarginValue: 30 };
-      renderAdmin(); renderMarket();
-      alert('Données réinitialisées.');
-    }
+    if(!confirm('Cette action supprimera toutes les données du projet, pour tout le monde. Continuer ?')) return;
+    const { error } = await sb.rpc('admin_reset_all', { p_pin: adminPin });
+    if(error){ alert('Erreur réseau, réessayez.'); return; }
+    articles = []; agents = []; orders = [];
+    settings = { pin: '00000', defaultMarginType: 'percent', defaultMarginValue: 30 };
+    adminPin = '00000';
+    selectedArticleIds.clear(); selectedOrderIds.clear(); selectedAgentIds.clear();
+    renderAdmin(); renderMarket();
+    alert('Données réinitialisées. Le code admin est maintenant 00000.');
   };
 
   // ---------- INSTALLATION (PWA) ----------
@@ -1355,11 +1628,12 @@
     alert('Depuis le menu de votre navigateur, choisissez "Ajouter à l\'écran d\'accueil" ou "Installer l\'application".');
   };
 
-  // ---------- TEMPS RÉEL ----------
+  // ---------- TEMPS RÉEL (articles uniquement) ----------
   function subscribeRealtime(){
     sb.channel('realtime-articles').on('postgres_changes', { event:'*', schema:'public', table:'articles' }, (payload) => {
       if(payload.eventType === 'DELETE'){
         articles = articles.filter(a => a.id !== payload.old.id);
+        selectedArticleIds.delete(payload.old.id);
       } else {
         const fresh = articleFromDb(payload.new);
         const idx = articles.findIndex(a => a.id === fresh.id);
@@ -1372,38 +1646,12 @@
       }
       refreshAllViews();
     }).subscribe();
-
-    sb.channel('realtime-agents').on('postgres_changes', { event:'*', schema:'public', table:'agents' }, (payload) => {
-      if(payload.eventType === 'DELETE'){
-        agents = agents.filter(a => a.id !== payload.old.id);
-      } else {
-        const fresh = agentFromDb(payload.new);
-        const idx = agents.findIndex(a => a.id === fresh.id);
-        if(idx >= 0) agents[idx] = fresh; else agents.push(fresh);
-      }
-      refreshAllViews();
-    }).subscribe();
-
-    sb.channel('realtime-orders').on('postgres_changes', { event:'*', schema:'public', table:'orders' }, (payload) => {
-      if(payload.eventType === 'DELETE'){
-        orders = orders.filter(o => o.id !== payload.old.id);
-      } else {
-        const fresh = orderFromDb(payload.new);
-        const idx = orders.findIndex(o => o.id === fresh.id);
-        if(idx >= 0) orders[idx] = fresh; else orders.push(fresh);
-      }
-      refreshAllViews();
-    }).subscribe();
-
-    sb.channel('realtime-settings').on('postgres_changes', { event:'*', schema:'public', table:'settings' }, (payload) => {
-      if(payload.new) settings = settingsFromDb(payload.new);
-    }).subscribe();
   }
 
   // ---------- INIT ----------
   const dbStatus = document.getElementById('dbStatus');
   try{
-    await loadAll();
+    await loadPublicArticles();
   }catch(e){
     document.getElementById('loadingOverlay').innerHTML = 'Connexion à la base de données impossible. Vérifiez votre connexion internet, puis rechargez la page.';
     dbStatus.textContent = '🔴 Hors ligne';
@@ -1411,12 +1659,20 @@
     return;
   }
   renderPhotoPreview();
-  updateComputeBox();
   renderMarket();
   subscribeRealtime();
   document.getElementById('loadingOverlay').classList.add('hidden');
   dbStatus.textContent = '🟢 Base de données en ligne';
   dbStatus.style.background = 'rgba(63,125,88,0.35)';
+
+  try{
+    let clientId = localStorage.getItem('nadia_client_id');
+    if(!clientId){
+      clientId = (window.crypto && crypto.randomUUID) ? crypto.randomUUID() : (uid()+uid()+uid());
+      localStorage.setItem('nadia_client_id', clientId);
+    }
+    sb.rpc('log_visit', { p_client_id: clientId });
+  }catch(e){}
 
   window.addEventListener('online', () => {
     dbStatus.textContent = '🟢 Base de données en ligne';
