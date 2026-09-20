@@ -13,6 +13,8 @@
 <link rel="apple-touch-icon" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA1MTIgNTEyIj4KPHJlY3Qgd2lkdGg9IjUxMiIgaGVpZ2h0PSI1MTIiIHJ4PSI5NiIgZmlsbD0iIzFGMkQ1MCIvPgo8dGV4dCB4PSI1MCUiIHk9IjYyJSIgZm9udC1mYW1pbHk9Ikdlb3JnaWEsIHNlcmlmIiBmb250LXNpemU9IjMwMCIgZm9udC13ZWlnaHQ9IjcwMCIgZmlsbD0iI0Q5QTQ0MSIgdGV4dC1hbmNob3I9Im1pZGRsZSI+TjwvdGV4dD4KPC9zdmc+">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <style>
   :root{
     --indigo: #1F2D50;
@@ -207,6 +209,7 @@
           <button class="admin-tab" data-tab="agentdash" data-role="agent">Mon tableau de bord</button>
           <button class="admin-tab" data-tab="articles" data-role="admin">Articles</button>
           <button class="admin-tab" data-tab="commandes" data-role="admin">Commandes</button>
+          <button class="admin-tab" data-tab="carte" data-role="admin">Carte</button>
           <button class="admin-tab" data-tab="agents" data-role="admin">Agents</button>
           <button class="admin-tab" data-tab="settings" data-role="admin">Réglages</button>
           <button id="logoutBtn" style="margin-top:10px; border-top:1px solid var(--border); padding:14px 14px 0; text-align:left; background:transparent; border-left:none; border-right:none; border-bottom:none; opacity:0.6; color:var(--fg); font-size:14px;">Se déconnecter</button>
@@ -272,6 +275,10 @@
                 <div class="field">
                   <label>Magasin / lieu d'achat (privé, non visible client)</label>
                   <input type="text" id="artStore" placeholder="Ex : Marché de Treichville">
+                </div>
+                <div class="field full" style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+                  <button type="button" class="ghost-btn" id="locateStoreBtn">📍 Localiser ce magasin (ma position actuelle)</button>
+                  <span class="note" id="storeLocateStatus" style="margin:0;"></span>
                 </div>
                 <div class="field">
                   <label>Nom du gérant et contact (privé, non visible client)</label>
@@ -394,6 +401,19 @@
             </div>
           </div>
 
+          <!-- CARTE -->
+          <div id="tab-carte" class="admin-tab-content hidden">
+            <div class="panel">
+              <h2>Magasins et livraisons</h2>
+              <div class="tabs-row">
+                <label style="display:flex; align-items:center; gap:6px; font-size:13px;"><input type="checkbox" id="toggleStoreMarkers" checked> 🔵 Magasins (articles enregistrés)</label>
+                <label style="display:flex; align-items:center; gap:6px; font-size:13px;"><input type="checkbox" id="toggleDeliveryMarkers" checked> 🔴 Lieux de livraison (commandes)</label>
+              </div>
+              <div id="mapContainer" style="height:520px; border-radius:12px; overflow:hidden; border:1px solid var(--border);"></div>
+              <p class="note" style="margin-top:10px;">Seuls les articles et commandes pour lesquels une position a été enregistrée apparaissent ici.</p>
+            </div>
+          </div>
+
           <!-- AGENTS -->
           <div id="tab-agents" class="admin-tab-content hidden">
             <div class="panel">
@@ -502,7 +522,9 @@
       storeName: r.store_name || '', managerContact: r.manager_contact || '', storePrice: Number(r.store_price)||0,
       delivery: Number(r.delivery)||0, marginType: r.margin_type, marginVal: Number(r.margin_val)||0,
       margin: Number(r.margin)||0, final: Number(r.final_price)||0, agentId: r.agent_id,
-      photos: r.photos || [], quantity: r.quantity, remaining: r.remaining, createdAt: r.created_at
+      photos: r.photos || [], quantity: r.quantity, remaining: r.remaining, createdAt: r.created_at,
+      storeLat: r.store_lat !== undefined && r.store_lat !== null ? Number(r.store_lat) : null,
+      storeLng: r.store_lng !== undefined && r.store_lng !== null ? Number(r.store_lng) : null
     };
   }
   function agentFromDb(r){
@@ -512,7 +534,11 @@
     return { id:r.id, articleId:r.article_id, articleName:r.article_name, category:r.category||'', photo:r.photo, price:Number(r.price)||0,
       margin:Number(r.margin)||0, agentId:r.agent_id, agentName:r.agent_name, commissionPct:Number(r.commission_pct)||0,
       commission:Number(r.commission)||0, buyerName:r.buyer_name||'', buyerPhone:r.buyer_phone||'', status:r.status,
-      manual:r.manual, soldAt:r.sold_at, cancelledAt:r.cancelled_at };
+      manual:r.manual, soldAt:r.sold_at, cancelledAt:r.cancelled_at,
+      deliveryAddress: r.delivery_address || '',
+      deliveryLat: r.delivery_lat !== undefined && r.delivery_lat !== null ? Number(r.delivery_lat) : null,
+      deliveryLng: r.delivery_lng !== undefined && r.delivery_lng !== null ? Number(r.delivery_lng) : null
+    };
   }
   function settingsFromDb(r){
     return { pin: r.pin, defaultMarginType: r.default_margin_type, defaultMarginValue: Number(r.default_margin_value)||0 };
@@ -691,12 +717,13 @@
       btn.classList.add('active');
       document.querySelectorAll('.admin-tab-content').forEach(c => c.classList.add('hidden'));
       document.getElementById('tab-' + btn.dataset.tab).classList.remove('hidden');
-      if(currentRole === 'admin' && ['dashboard','commandes','agents'].includes(btn.dataset.tab)){
+      if(currentRole === 'admin' && ['dashboard','commandes','agents','carte'].includes(btn.dataset.tab)){
         await refreshAdminOrdersAndAgents();
       }
       if(btn.dataset.tab === 'dashboard') renderDashboard();
       if(btn.dataset.tab === 'articles') renderArticlesTable();
       if(btn.dataset.tab === 'commandes') renderOrders();
+      if(btn.dataset.tab === 'carte') renderMap();
       if(btn.dataset.tab === 'agents') renderAgents();
       if(btn.dataset.tab === 'agentdash') renderAgentDash();
       if(btn.dataset.tab === 'add') refreshAgentSelect();
@@ -776,6 +803,7 @@
   function openOrderModal(articleId){
     const article = articles.find(a => a.id === articleId);
     if(!article) return;
+    let deliveryLat = null, deliveryLng = null;
     const root = document.getElementById('modalRoot');
     root.innerHTML = `
       <div class="modal-bg" id="modalBg">
@@ -784,19 +812,45 @@
           <p>${escapeHtml(article.name)} — ${FCFA(article.final)}, livraison incluse.</p>
           <div class="field"><label>Nom du client</label><input type="text" id="ordName" placeholder="Votre nom"></div>
           <div class="field"><label>Téléphone</label><input type="tel" id="ordPhone" placeholder="Votre numéro"></div>
+          <div class="field">
+            <label>Lieu de livraison souhaité</label>
+            <input type="text" id="ordAddress" placeholder="Ex : Cocody Angré, rue des Jardins">
+          </div>
+          <div class="field" style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+            <button type="button" class="ghost-btn" id="locateDeliveryBtn">📍 Utiliser ma position actuelle</button>
+            <span class="note" id="deliveryLocateStatus" style="margin:0;"></span>
+          </div>
           <div class="modal-actions">
             <button class="ghost-btn" id="cancelOrd">Annuler</button>
             <button class="primary-btn" id="confirmOrd">Confirmer</button>
           </div>
         </div>
       </div>`;
+    document.getElementById('locateDeliveryBtn').onclick = () => {
+      const statusEl = document.getElementById('deliveryLocateStatus');
+      if(!navigator.geolocation){ statusEl.textContent = 'Géolocalisation non disponible sur cet appareil.'; return; }
+      statusEl.textContent = 'Recherche de la position…';
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          deliveryLat = pos.coords.latitude; deliveryLng = pos.coords.longitude;
+          statusEl.textContent = '✓ Position ajoutée';
+        },
+        () => { statusEl.textContent = 'Position refusée ou indisponible.'; },
+        { enableHighAccuracy: true, timeout: 10000 }
+      );
+    };
     document.getElementById('cancelOrd').onclick = () => root.innerHTML = '';
     document.getElementById('modalBg').onclick = (e) => { if(e.target.id === 'modalBg') root.innerHTML = ''; };
     document.getElementById('confirmOrd').onclick = async () => {
       const confirmBtn = document.getElementById('confirmOrd'); confirmBtn.disabled = true;
       const buyerName = document.getElementById('ordName').value.trim();
       const buyerPhone = document.getElementById('ordPhone').value.trim();
-      const { data, error } = await sb.rpc('place_order_public', { p_article_id: article.id, p_buyer_name: buyerName, p_buyer_phone: buyerPhone });
+      const deliveryAddress = document.getElementById('ordAddress').value.trim();
+      if(!deliveryAddress){ alert('Merci d\'indiquer le lieu de livraison souhaité.'); confirmBtn.disabled = false; return; }
+      const { data, error } = await sb.rpc('place_order_public', {
+        p_article_id: article.id, p_buyer_name: buyerName, p_buyer_phone: buyerPhone,
+        p_delivery_address: deliveryAddress, p_delivery_lat: deliveryLat, p_delivery_lng: deliveryLng
+      });
       if(error || !data || !data.ok){
         root.innerHTML=''; renderMarket();
         alert('Désolé, cet article vient d\'être épuisé.');
@@ -843,6 +897,21 @@
       agents.map(a => `<option value="${a.id}">${escapeHtml(a.name)}</option>`).join('');
     sel.value = current;
   }
+
+  let storeLat = null, storeLng = null;
+  document.getElementById('locateStoreBtn').onclick = () => {
+    const statusEl = document.getElementById('storeLocateStatus');
+    if(!navigator.geolocation){ statusEl.textContent = 'Géolocalisation non disponible sur cet appareil.'; return; }
+    statusEl.textContent = 'Recherche de la position…';
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        storeLat = pos.coords.latitude; storeLng = pos.coords.longitude;
+        statusEl.textContent = '✓ Position enregistrée';
+      },
+      () => { statusEl.textContent = 'Position refusée ou indisponible.'; },
+      { enableHighAccuracy: true, timeout: 10000 }
+    );
+  };
 
   document.querySelectorAll('input[name=marginType]').forEach(r => r.onchange = () => {
     const t = document.querySelector('input[name=marginType]:checked').value;
@@ -898,13 +967,15 @@
         p_pin: adminPin, p_name: name, p_category: category, p_characteristics: characteristics,
         p_store_name: storeName, p_manager_contact: managerContact, p_store_price: storePrice, p_delivery: delivery,
         p_margin_type: marginType, p_margin_val: marginVal, p_agent_id: agentId,
-        p_photos: uploadedPhotos.slice(0,3), p_quantity: quantity
+        p_photos: uploadedPhotos.slice(0,3), p_quantity: quantity,
+        p_store_lat: storeLat, p_store_lng: storeLng
       });
     } else {
       result = await sb.rpc('agent_add_article', {
         p_code: agentCode, p_name: name, p_category: category, p_characteristics: characteristics,
         p_store_name: storeName, p_manager_contact: managerContact, p_store_price: storePrice, p_delivery: delivery,
-        p_photos: uploadedPhotos.slice(0,3), p_quantity: quantity
+        p_photos: uploadedPhotos.slice(0,3), p_quantity: quantity,
+        p_store_lat: storeLat, p_store_lng: storeLng
       });
     }
     saveBtn.disabled = false;
@@ -919,6 +990,8 @@
     document.getElementById('artStorePrice').value = '';
     document.getElementById('artDelivery').value = '';
     document.getElementById('artQuantity').value = '1';
+    storeLat = null; storeLng = null;
+    document.getElementById('storeLocateStatus').textContent = '';
     uploadedPhotos = []; renderPhotoPreview();
     presetMarginFields();
     renderAgentDash();
@@ -1124,6 +1197,7 @@
     const article = articles.find(a => a.id === articleId);
     if(!article) return;
     let editPhotos = article.photos.slice();
+    let editStoreLat = article.storeLat, editStoreLng = article.storeLng;
     const root = document.getElementById('modalRoot');
     root.innerHTML = `
       <div class="modal-bg" id="editArtModalBg">
@@ -1136,6 +1210,10 @@
           <div class="field" style="margin-bottom:10px;"><label>Nom</label><input type="text" id="editArtName" value="${escapeHtml(article.name)}"></div>
           <div class="field" style="margin-bottom:10px;"><label>Caractéristiques</label><input type="text" id="editArtCharacteristics" value="${escapeHtml(article.characteristics)}"></div>
           <div class="field" style="margin-bottom:10px;"><label>Magasin / lieu d'achat</label><input type="text" id="editArtStore" value="${escapeHtml(article.storeName)}"></div>
+          <div class="field" style="margin-bottom:10px; display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+            <button type="button" class="ghost-btn" id="editLocateStoreBtn">📍 Localiser ce magasin (ma position actuelle)</button>
+            <span class="note" id="editStoreLocateStatus" style="margin:0;">${article.storeLat ? 'Position déjà enregistrée' : ''}</span>
+          </div>
           <div class="field" style="margin-bottom:10px;"><label>Nom du gérant et contact</label><input type="text" id="editArtManagerContact" value="${escapeHtml(article.managerContact)}"></div>
           <div class="field" style="margin-bottom:10px;"><label>Prix magasin (FCFA)</label><input type="number" id="editArtStorePrice" value="${article.storePrice}"></div>
           <div class="field" style="margin-bottom:10px;"><label>Frais de livraison (FCFA)</label><input type="number" id="editArtDelivery" value="${article.delivery}"></div>
@@ -1178,6 +1256,20 @@
     document.getElementById('editArtPhotoGallery').onchange = (e) => { addEditPhotos(e.target.files); e.target.value=''; };
     document.getElementById('editArtPhotoCamera').onchange = (e) => { addEditPhotos(e.target.files); e.target.value=''; };
 
+    document.getElementById('editLocateStoreBtn').onclick = () => {
+      const statusEl = document.getElementById('editStoreLocateStatus');
+      if(!navigator.geolocation){ statusEl.textContent = 'Géolocalisation non disponible sur cet appareil.'; return; }
+      statusEl.textContent = 'Recherche de la position…';
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          editStoreLat = pos.coords.latitude; editStoreLng = pos.coords.longitude;
+          statusEl.textContent = '✓ Position mise à jour';
+        },
+        () => { statusEl.textContent = 'Position refusée ou indisponible.'; },
+        { enableHighAccuracy: true, timeout: 10000 }
+      );
+    };
+
     document.getElementById('cancelEditArt').onclick = () => root.innerHTML = '';
     document.getElementById('editArtModalBg').onclick = (e) => { if(e.target.id === 'editArtModalBg') root.innerHTML = ''; };
     document.getElementById('confirmEditArt').onclick = async () => {
@@ -1191,7 +1283,8 @@
         p_manager_contact: document.getElementById('editArtManagerContact').value.trim(),
         p_store_price: Number(document.getElementById('editArtStorePrice').value)||0,
         p_delivery: Number(document.getElementById('editArtDelivery').value)||0,
-        p_photos: editPhotos
+        p_photos: editPhotos,
+        p_store_lat: editStoreLat, p_store_lng: editStoreLng
       });
       confirmBtn.disabled = false;
       if(error){ alert('Erreur réseau, réessayez.'); return; }
@@ -1361,6 +1454,58 @@
       const { data } = await sb.rpc('get_agent_stats', { p_code: agentCode });
       if(data){ currentAgentInfo = data; renderAgentDash(); }
     };
+  }
+
+  // ---------- CARTE ----------
+  let leafletMap = null;
+  let storeMarkersLayer = null;
+  let deliveryMarkersLayer = null;
+
+  function ensureMap(){
+    if(leafletMap) return;
+    leafletMap = L.map('mapContainer').setView([5.34, -4.03], 11); // Abidjan par défaut
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '&copy; OpenStreetMap contributors',
+      maxZoom: 19
+    }).addTo(leafletMap);
+    storeMarkersLayer = L.layerGroup().addTo(leafletMap);
+    deliveryMarkersLayer = L.layerGroup().addTo(leafletMap);
+    document.getElementById('toggleStoreMarkers').onchange = (e) => {
+      if(e.target.checked) leafletMap.addLayer(storeMarkersLayer); else leafletMap.removeLayer(storeMarkersLayer);
+    };
+    document.getElementById('toggleDeliveryMarkers').onchange = (e) => {
+      if(e.target.checked) leafletMap.addLayer(deliveryMarkersLayer); else leafletMap.removeLayer(deliveryMarkersLayer);
+    };
+  }
+
+  function renderMap(){
+    if(currentRole !== 'admin') return;
+    ensureMap();
+    storeMarkersLayer.clearLayers();
+    deliveryMarkersLayer.clearLayers();
+
+    const storeIcon = L.divIcon({ className: '', html: '<div style="width:16px;height:16px;border-radius:50%;background:#1F2D50;border:2px solid #fff;box-shadow:0 0 0 1px #1F2D50;"></div>', iconSize:[16,16] });
+    const deliveryIcon = L.divIcon({ className: '', html: '<div style="width:16px;height:16px;border-radius:50%;background:#B5482B;border:2px solid #fff;box-shadow:0 0 0 1px #B5482B;"></div>', iconSize:[16,16] });
+
+    const bounds = [];
+    articles.forEach(a => {
+      if(a.storeLat == null || a.storeLng == null) return;
+      const marker = L.marker([a.storeLat, a.storeLng], { icon: storeIcon }).addTo(storeMarkersLayer);
+      marker.bindPopup(`<strong>${escapeHtml(a.name)}</strong><br>${escapeHtml(a.storeName||'Magasin non précisé')}${a.managerContact ? '<br>'+escapeHtml(a.managerContact) : ''}`);
+      bounds.push([a.storeLat, a.storeLng]);
+    });
+    orders.forEach(o => {
+      if(o.deliveryLat == null || o.deliveryLng == null) return;
+      const marker = L.marker([o.deliveryLat, o.deliveryLng], { icon: deliveryIcon }).addTo(deliveryMarkersLayer);
+      const dateStr = o.soldAt ? new Date(o.soldAt).toLocaleDateString('fr-FR') : '';
+      marker.bindPopup(`<strong>${escapeHtml(o.articleName)}</strong><br>${escapeHtml(o.buyerName||'Client')} — ${escapeHtml(o.buyerPhone||'')}<br>${escapeHtml(o.deliveryAddress||'')}<br><span style="color:#888;">${dateStr}</span>`);
+      bounds.push([o.deliveryLat, o.deliveryLng]);
+    });
+
+    if(bounds.length > 0){
+      leafletMap.fitBounds(bounds, { padding: [30,30], maxZoom: 15 });
+    }
+    setTimeout(() => leafletMap.invalidateSize(), 100);
   }
 
   // ---------- AGENTS ----------
