@@ -979,7 +979,7 @@
       });
     }
     saveBtn.disabled = false;
-    if(result.error){ alert('Impossible d\'ajouter l\'article, vérifiez la connexion et réessayez.'); return; }
+    if(result.error){ alert('Erreur : ' + (result.error && result.error.message ? result.error.message : 'connexion impossible, réessayez.')); return; }
     articles.push(articleFromDb(result.data));
 
     document.getElementById('artCategory').value = '';
@@ -1034,7 +1034,7 @@
     if(!confirm(`Supprimer les ${selectedArticleIds.size} article(s) sélectionné(s) ?`)) return;
     const ids = Array.from(selectedArticleIds);
     const { error } = await sb.rpc('admin_delete_articles', { p_pin: adminPin, p_ids: ids });
-    if(error){ alert('Erreur réseau, réessayez.'); return; }
+    if(error){ alert('Erreur : ' + (error && error.message ? error.message : 'connexion impossible, réessayez.')); return; }
     articles = articles.filter(a => !selectedArticleIds.has(a.id));
     selectedArticleIds.clear();
     renderArticlesTable(); renderDashboard(); renderMarket();
@@ -1042,7 +1042,7 @@
   document.getElementById('clearArticlesBtn').onclick = async () => {
     if(!confirm('Supprimer définitivement tous les articles de la boutique ? Les commandes déjà passées resteront dans l\'historique.')) return;
     const { error } = await sb.rpc('admin_clear_articles', { p_pin: adminPin });
-    if(error){ alert('Erreur réseau, réessayez.'); return; }
+    if(error){ alert('Erreur : ' + (error && error.message ? error.message : 'connexion impossible, réessayez.')); return; }
     articles = []; selectedArticleIds.clear();
     renderArticlesTable(); renderDashboard(); renderMarket(); renderAgentDash();
     alert('Articles supprimés.');
@@ -1115,7 +1115,7 @@
         if(btn.dataset.act === 'sell1'){
           if(art.remaining <= 0){ alert('Stock épuisé pour cet article.'); return; }
           const { data, error } = await sb.rpc('admin_sell_one', { p_pin: adminPin, p_article_id: art.id });
-          if(error || !data || !data.ok){ alert('Vente impossible (stock épuisé ou erreur réseau).'); return; }
+          if(error || !data || !data.ok){ alert('Vente impossible : ' + (error && error.message ? error.message : (data && data.reason==='out_of_stock' ? 'stock épuisé.' : 'erreur réseau.'))); return; }
           art.remaining = data.remaining;
           const agent = art.agentId ? agentById(art.agentId) : null;
           orders.push({
@@ -1132,7 +1132,7 @@
           const n = Number(prompt('Combien d\'unités ajouter au stock ?', '1')) || 0;
           if(n > 0){
             const { data, error } = await sb.rpc('admin_add_stock', { p_pin: adminPin, p_article_id: art.id, p_qty: n });
-            if(error){ alert('Erreur réseau, réessayez.'); return; }
+            if(error){ alert('Erreur : ' + (error && error.message ? error.message : 'connexion impossible, réessayez.')); return; }
             Object.assign(art, articleFromDb(data));
             renderArticlesTable(); renderDashboard(); renderMarket();
           }
@@ -1142,7 +1142,7 @@
         if(btn.dataset.act === 'delete'){
           if(confirm('Supprimer cet article ?')){
             const { error } = await sb.rpc('admin_delete_article', { p_pin: adminPin, p_article_id: art.id });
-            if(error){ alert('Erreur réseau, réessayez.'); return; }
+            if(error){ alert('Erreur : ' + (error && error.message ? error.message : 'connexion impossible, réessayez.')); return; }
             articles = articles.filter(x => x.id !== art.id);
             selectedArticleIds.delete(art.id);
           }
@@ -1187,7 +1187,7 @@
       const marginType = document.querySelector('input[name=editMarginType]:checked').value;
       const marginVal = Number(document.getElementById('editMarginValue').value)||0;
       const { data, error } = await sb.rpc('admin_edit_margin', { p_pin: adminPin, p_article_id: article.id, p_margin_type: marginType, p_margin_val: marginVal });
-      if(error){ alert('Erreur réseau, réessayez.'); return; }
+      if(error){ alert('Erreur : ' + (error && error.message ? error.message : 'connexion impossible, réessayez.')); return; }
       Object.assign(article, articleFromDb(data));
       root.innerHTML = ''; renderArticlesTable(); renderDashboard(); renderMarket();
     };
@@ -1287,7 +1287,7 @@
         p_store_lat: editStoreLat, p_store_lng: editStoreLng
       });
       confirmBtn.disabled = false;
-      if(error){ alert('Erreur réseau, réessayez.'); return; }
+      if(error){ alert('Erreur : ' + (error && error.message ? error.message : 'connexion impossible, réessayez.')); return; }
       Object.assign(article, articleFromDb(data));
       root.innerHTML = '';
       renderArticlesTable(); renderMarket(); renderDashboard();
@@ -1324,7 +1324,7 @@
     if(!confirm(`Supprimer définitivement les ${selectedOrderIds.size} commande(s) sélectionnée(s) ? Le stock ne sera pas remis automatiquement.`)) return;
     const ids = Array.from(selectedOrderIds);
     const { error } = await sb.rpc('admin_delete_orders', { p_pin: adminPin, p_ids: ids });
-    if(error){ alert('Erreur réseau, réessayez.'); return; }
+    if(error){ alert('Erreur : ' + (error && error.message ? error.message : 'connexion impossible, réessayez.')); return; }
     orders = orders.filter(o => !selectedOrderIds.has(o.id));
     selectedOrderIds.clear();
     renderOrders(); renderDashboard();
@@ -1332,7 +1332,7 @@
   document.getElementById('clearOrdersBtn').onclick = async () => {
     if(!confirm('Supprimer définitivement toutes les commandes (valides et annulées) ? Le stock des articles ne sera pas remis automatiquement.')) return;
     const { error } = await sb.rpc('admin_clear_orders', { p_pin: adminPin });
-    if(error){ alert('Erreur réseau, réessayez.'); return; }
+    if(error){ alert('Erreur : ' + (error && error.message ? error.message : 'connexion impossible, réessayez.')); return; }
     orders = []; selectedOrderIds.clear();
     renderOrders(); renderDashboard(); renderAgentDash();
     alert('Commandes supprimées.');
@@ -1340,7 +1340,7 @@
 
   async function cancelOrder(orderId){
     const { data, error } = await sb.rpc('admin_cancel_order', { p_pin: adminPin, p_order_id: orderId });
-    if(error || !data || !data.ok){ alert('Erreur réseau, réessayez.'); return; }
+    if(error || !data || !data.ok){ alert('Erreur : ' + (error && error.message ? error.message : 'connexion impossible, réessayez.')); return; }
     const order = orders.find(o => o.id === orderId);
     if(order){ order.status = 'cancelled'; order.cancelledAt = new Date().toISOString(); }
     const art = order ? articles.find(a => a.id === order.articleId) : null;
@@ -1350,7 +1350,7 @@
 
   async function reactivateOrder(orderId){
     const { data, error } = await sb.rpc('admin_reactivate_order', { p_pin: adminPin, p_order_id: orderId });
-    if(error || !data){ alert('Erreur réseau, réessayez.'); return; }
+    if(error || !data){ alert('Erreur : ' + (error && error.message ? error.message : 'connexion impossible, réessayez.')); return; }
     if(!data.ok){ alert(data.reason === 'out_of_stock' ? 'Stock épuisé, impossible de réactiver cette commande.' : 'Action impossible.'); return; }
     const order = orders.find(o => o.id === orderId);
     if(order){ order.status = 'valid'; delete order.cancelledAt; }
@@ -1515,7 +1515,7 @@
     const pct = Number(document.getElementById('agentCommission').value)||0;
     if(!name){ alert('Merci d\'indiquer le nom de l\'agent.'); return; }
     const { data, error } = await sb.rpc('admin_add_agent', { p_pin: adminPin, p_name: name, p_phone: phone, p_commission_pct: pct });
-    if(error){ alert('Impossible d\'ajouter l\'agent, réessayez.'); return; }
+    if(error){ alert('Erreur : ' + (error && error.message ? error.message : 'connexion impossible, réessayez.')); return; }
     const agent = agentFromDb(data);
     agents.push(agent);
     document.getElementById('agentName').value='';
@@ -1536,7 +1536,7 @@
     if(!confirm(`Supprimer les ${selectedAgentIds.size} agent(s) sélectionné(s) ? Leurs articles resteront mais sans agent associé.`)) return;
     const ids = Array.from(selectedAgentIds);
     const { error } = await sb.rpc('admin_delete_agents', { p_pin: adminPin, p_ids: ids });
-    if(error){ alert('Erreur réseau, réessayez.'); return; }
+    if(error){ alert('Erreur : ' + (error && error.message ? error.message : 'connexion impossible, réessayez.')); return; }
     agents = agents.filter(a => !selectedAgentIds.has(a.id));
     articles.forEach(a => { if(selectedAgentIds.has(a.agentId)) a.agentId = null; });
     selectedAgentIds.clear();
@@ -1545,7 +1545,7 @@
   document.getElementById('clearAgentsBtn').onclick = async () => {
     if(!confirm('Supprimer définitivement tous les agents ? Les articles liés resteront mais sans agent associé.')) return;
     const { error } = await sb.rpc('admin_clear_agents', { p_pin: adminPin });
-    if(error){ alert('Erreur réseau, réessayez.'); return; }
+    if(error){ alert('Erreur : ' + (error && error.message ? error.message : 'connexion impossible, réessayez.')); return; }
     agents = []; selectedAgentIds.clear();
     articles.forEach(a => { a.agentId = null; });
     renderAgents(); refreshAgentSelect(); renderArticlesTable(); renderDashboard();
@@ -1597,13 +1597,13 @@
           if(btn.dataset.act === 'pay'){
             const stats = agentStats(agent.id);
             const { data, error } = await sb.rpc('admin_mark_agent_paid', { p_pin: adminPin, p_agent_id: agent.id, p_amount: stats.totalDue });
-            if(error){ alert('Erreur réseau, réessayez.'); return; }
+            if(error){ alert('Erreur : ' + (error && error.message ? error.message : 'connexion impossible, réessayez.')); return; }
             Object.assign(agent, agentFromDb(data));
             renderAgents(); renderDashboard();
           }
           if(btn.dataset.act === 'regen'){
             const { data, error } = await sb.rpc('admin_regen_agent_code', { p_pin: adminPin, p_agent_id: agent.id });
-            if(error){ alert('Erreur réseau, réessayez.'); return; }
+            if(error){ alert('Erreur : ' + (error && error.message ? error.message : 'connexion impossible, réessayez.')); return; }
             agent.code = data.code;
             renderAgents();
             alert(`Nouveau code d'accès pour ${agent.name} : ${agent.code}`);
@@ -1611,7 +1611,7 @@
           if(btn.dataset.act === 'delAgent'){
             if(confirm('Supprimer cet agent ? Les articles liés resteront mais sans agent associé.')){
               const { error } = await sb.rpc('admin_delete_agent', { p_pin: adminPin, p_agent_id: agent.id });
-              if(error){ alert('Erreur réseau, réessayez.'); return; }
+              if(error){ alert('Erreur : ' + (error && error.message ? error.message : 'connexion impossible, réessayez.')); return; }
               agents = agents.filter(x => x.id !== agent.id);
               selectedAgentIds.delete(agent.id);
               articles.forEach(a => { if(a.agentId === agent.id) a.agentId = null; });
@@ -1707,7 +1707,7 @@
     const newType = document.querySelector('input[name=defMarginType]:checked').value;
     const newVal = Number(document.getElementById('defMarginValue').value)||0;
     const { data, error } = await sb.rpc('admin_update_settings', { p_pin: adminPin, p_new_pin: null, p_default_margin_type: newType, p_default_margin_value: newVal });
-    if(error){ alert('Erreur réseau, réessayez.'); return; }
+    if(error){ alert('Erreur : ' + (error && error.message ? error.message : 'connexion impossible, réessayez.')); return; }
     settings = settingsFromDb(data);
     updateComputeBox();
     alert('Marge par défaut enregistrée.');
@@ -1716,7 +1716,7 @@
     const val = document.getElementById('newPin').value.trim();
     if(!val) return;
     const { data, error } = await sb.rpc('admin_update_settings', { p_pin: adminPin, p_new_pin: val, p_default_margin_type: null, p_default_margin_value: null });
-    if(error){ alert('Erreur réseau, réessayez.'); return; }
+    if(error){ alert('Erreur : ' + (error && error.message ? error.message : 'connexion impossible, réessayez.')); return; }
     settings = settingsFromDb(data);
     adminPin = val;
     document.getElementById('newPin').value='';
@@ -1725,7 +1725,7 @@
   document.getElementById('resetAllBtn').onclick = async () => {
     if(!confirm('Cette action supprimera toutes les données du projet, pour tout le monde. Continuer ?')) return;
     const { error } = await sb.rpc('admin_reset_all', { p_pin: adminPin });
-    if(error){ alert('Erreur réseau, réessayez.'); return; }
+    if(error){ alert('Erreur : ' + (error && error.message ? error.message : 'connexion impossible, réessayez.')); return; }
     articles = []; agents = []; orders = [];
     settings = { pin: '00000', defaultMarginType: 'percent', defaultMarginValue: 30 };
     adminPin = '00000';
