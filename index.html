@@ -149,6 +149,13 @@
   .photo-preview img{width:56px; height:56px; object-fit:cover; border-radius:8px; border:1px solid var(--border);}
   .photo-preview .rm{position:absolute; top:-6px; right:-6px; width:18px; height:18px; border-radius:50%; background:var(--danger); color:#fff; border:none; font-size:11px; line-height:1;}
 
+  .map-list-item{padding:8px 10px; border-bottom:1px solid var(--border); cursor:pointer; font-size:13px;}
+  .map-list-item:last-child{border-bottom:none;}
+  .map-list-item:hover{background:var(--stone);}
+  .map-list-item .ml-title{font-weight:600;}
+  .map-list-item .ml-sub{color:var(--muted); font-size:11.5px;}
+  .map-list-empty{padding:16px; text-align:center; color:var(--muted); font-size:12.5px;}
+
   @media(max-width:720px){
     .admin-shell{flex-direction:column;}
     .admin-side{width:100%; flex-direction:row; overflow-x:auto; position:static;}
@@ -409,8 +416,17 @@
                 <label style="display:flex; align-items:center; gap:6px; font-size:13px;"><input type="checkbox" id="toggleStoreMarkers" checked> 🔵 Magasins (articles enregistrés)</label>
                 <label style="display:flex; align-items:center; gap:6px; font-size:13px;"><input type="checkbox" id="toggleDeliveryMarkers" checked> 🔴 Lieux de livraison (commandes)</label>
               </div>
-              <div id="mapContainer" style="height:520px; border-radius:12px; overflow:hidden; border:1px solid var(--border);"></div>
-              <p class="note" style="margin-top:10px;">Seuls les articles et commandes pour lesquels une position a été enregistrée apparaissent ici.</p>
+              <div style="display:flex; gap:16px; flex-wrap:wrap; align-items:flex-start;">
+                <div id="mapContainer" style="flex:2; min-width:280px; height:520px; border-radius:12px; overflow:hidden; border:1px solid var(--border);"></div>
+                <div style="flex:1; min-width:220px; max-width:340px;">
+                  <input type="text" id="mapSearch" placeholder="🔎 Rechercher un article, un magasin, un client…" style="margin-bottom:10px;">
+                  <div style="margin-bottom:6px; font-size:12px; color:var(--muted); font-weight:600;">🔵 Magasins</div>
+                  <div id="mapStoreList" style="max-height:200px; overflow-y:auto; border:1px solid var(--border); border-radius:10px; margin-bottom:14px;"></div>
+                  <div style="margin-bottom:6px; font-size:12px; color:var(--muted); font-weight:600;">🔴 Livraisons</div>
+                  <div id="mapOrderList" style="max-height:200px; overflow-y:auto; border:1px solid var(--border); border-radius:10px;"></div>
+                </div>
+              </div>
+              <p class="note" style="margin-top:10px;">Seuls les articles et commandes pour lesquels une position a été enregistrée apparaissent ici. Cliquez un élément de la liste pour le retrouver sur la carte.</p>
             </div>
           </div>
 
@@ -1460,6 +1476,8 @@
   let leafletMap = null;
   let storeMarkersLayer = null;
   let deliveryMarkersLayer = null;
+  let storeMarkersById = {};
+  let deliveryMarkersById = {};
 
   function ensureMap(){
     if(leafletMap) return;
@@ -1476,6 +1494,56 @@
     document.getElementById('toggleDeliveryMarkers').onchange = (e) => {
       if(e.target.checked) leafletMap.addLayer(deliveryMarkersLayer); else leafletMap.removeLayer(deliveryMarkersLayer);
     };
+    document.getElementById('mapSearch').addEventListener('input', renderMapLists);
+  }
+
+  function goToStore(articleId){
+    const marker = storeMarkersById[articleId];
+    if(!marker) return;
+    document.getElementById('toggleStoreMarkers').checked = true;
+    if(!leafletMap.hasLayer(storeMarkersLayer)) leafletMap.addLayer(storeMarkersLayer);
+    leafletMap.setView(marker.getLatLng(), 16, { animate: true });
+    marker.openPopup();
+  }
+  function goToDelivery(orderId){
+    const marker = deliveryMarkersById[orderId];
+    if(!marker) return;
+    document.getElementById('toggleDeliveryMarkers').checked = true;
+    if(!leafletMap.hasLayer(deliveryMarkersLayer)) leafletMap.addLayer(deliveryMarkersLayer);
+    leafletMap.setView(marker.getLatLng(), 16, { animate: true });
+    marker.openPopup();
+  }
+
+  function renderMapLists(){
+    const searchVal = document.getElementById('mapSearch').value.trim().toLowerCase();
+
+    const storeList = document.getElementById('mapStoreList');
+    const storesWithPos = articles.filter(a => a.storeLat != null && a.storeLng != null);
+    const filteredStores = searchVal
+      ? storesWithPos.filter(a => (a.name||'').toLowerCase().includes(searchVal) || (a.storeName||'').toLowerCase().includes(searchVal) || (a.category||'').toLowerCase().includes(searchVal))
+      : storesWithPos;
+    storeList.innerHTML = filteredStores.length === 0
+      ? `<div class="map-list-empty">${storesWithPos.length === 0 ? 'Aucun magasin localisé.' : 'Aucun résultat.'}</div>`
+      : filteredStores.map(a => `
+          <div class="map-list-item" data-id="${a.id}">
+            <div class="ml-title">${escapeHtml(a.name)}</div>
+            <div class="ml-sub">${escapeHtml(a.storeName || 'Magasin non précisé')}</div>
+          </div>`).join('');
+    storeList.querySelectorAll('.map-list-item').forEach(el => { el.onclick = () => goToStore(el.dataset.id); });
+
+    const orderList = document.getElementById('mapOrderList');
+    const ordersWithPos = orders.filter(o => o.deliveryLat != null && o.deliveryLng != null);
+    const filteredOrders = searchVal
+      ? ordersWithPos.filter(o => (o.articleName||'').toLowerCase().includes(searchVal) || (o.buyerName||'').toLowerCase().includes(searchVal) || (o.deliveryAddress||'').toLowerCase().includes(searchVal))
+      : ordersWithPos;
+    orderList.innerHTML = filteredOrders.length === 0
+      ? `<div class="map-list-empty">${ordersWithPos.length === 0 ? 'Aucune livraison localisée.' : 'Aucun résultat.'}</div>`
+      : filteredOrders.slice().reverse().map(o => `
+          <div class="map-list-item" data-id="${o.id}">
+            <div class="ml-title">${escapeHtml(o.buyerName || 'Client')} — ${escapeHtml(o.articleName)}</div>
+            <div class="ml-sub">${escapeHtml(o.deliveryAddress || '')}</div>
+          </div>`).join('');
+    orderList.querySelectorAll('.map-list-item').forEach(el => { el.onclick = () => goToDelivery(el.dataset.id); });
   }
 
   function renderMap(){
@@ -1483,6 +1551,8 @@
     ensureMap();
     storeMarkersLayer.clearLayers();
     deliveryMarkersLayer.clearLayers();
+    storeMarkersById = {};
+    deliveryMarkersById = {};
 
     const storeIcon = L.divIcon({ className: '', html: '<div style="width:16px;height:16px;border-radius:50%;background:#1F2D50;border:2px solid #fff;box-shadow:0 0 0 1px #1F2D50;"></div>', iconSize:[16,16] });
     const deliveryIcon = L.divIcon({ className: '', html: '<div style="width:16px;height:16px;border-radius:50%;background:#B5482B;border:2px solid #fff;box-shadow:0 0 0 1px #B5482B;"></div>', iconSize:[16,16] });
@@ -1492,6 +1562,7 @@
       if(a.storeLat == null || a.storeLng == null) return;
       const marker = L.marker([a.storeLat, a.storeLng], { icon: storeIcon }).addTo(storeMarkersLayer);
       marker.bindPopup(`<strong>${escapeHtml(a.name)}</strong><br>${escapeHtml(a.storeName||'Magasin non précisé')}${a.managerContact ? '<br>'+escapeHtml(a.managerContact) : ''}`);
+      storeMarkersById[a.id] = marker;
       bounds.push([a.storeLat, a.storeLng]);
     });
     orders.forEach(o => {
@@ -1499,6 +1570,7 @@
       const marker = L.marker([o.deliveryLat, o.deliveryLng], { icon: deliveryIcon }).addTo(deliveryMarkersLayer);
       const dateStr = o.soldAt ? new Date(o.soldAt).toLocaleDateString('fr-FR') : '';
       marker.bindPopup(`<strong>${escapeHtml(o.articleName)}</strong><br>${escapeHtml(o.buyerName||'Client')} — ${escapeHtml(o.buyerPhone||'')}<br>${escapeHtml(o.deliveryAddress||'')}<br><span style="color:#888;">${dateStr}</span>`);
+      deliveryMarkersById[o.id] = marker;
       bounds.push([o.deliveryLat, o.deliveryLng]);
     });
 
@@ -1506,6 +1578,7 @@
       leafletMap.fitBounds(bounds, { padding: [30,30], maxZoom: 15 });
     }
     setTimeout(() => leafletMap.invalidateSize(), 100);
+    renderMapLists();
   }
 
   // ---------- AGENTS ----------
