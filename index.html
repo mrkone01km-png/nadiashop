@@ -121,6 +121,7 @@
   .tag{padding:3px 10px; border-radius:var(--radius-pill); font-size:11.5px; font-weight:600;}
   .tag.stock{background:rgba(63,125,88,0.14); color:var(--success);}
   .tag.sold{background:rgba(107,101,88,0.14); color:var(--muted);}
+  .tag.processing{background:rgba(217,164,65,0.22); color:#8a6115;}
   .tabs-row{display:flex; gap:8px; margin-bottom:16px;}
   .tabs-row button{border:1px solid var(--border); background:transparent; padding:7px 14px; border-radius:var(--radius-pill); font-size:13px; color:var(--fg); opacity:0.7;}
   .tabs-row button.active{opacity:1; background:var(--stone); font-weight:600;}
@@ -268,6 +269,8 @@
                     <option value="Bébé & Enfants">Bébé & Enfants</option>
                     <option value="Sport & Loisirs">Sport & Loisirs</option>
                     <option value="Fournitures & équipements scolaires">Fournitures & équipements scolaires</option>
+                    <option value="Quincaillerie">Quincaillerie</option>
+                    <option value="Mercerie">Mercerie</option>
                     <option value="Autres">Autres</option>
                   </select>
                 </div>
@@ -401,7 +404,7 @@
               </div>
               <div style="overflow-x:auto;">
                 <table>
-                  <thead><tr><th><input type="checkbox" id="selectAllOrders"></th><th></th><th>Article</th><th>Prix</th><th>Client</th><th>Téléphone</th><th>Date</th><th>Statut</th><th>Actions</th></tr></thead>
+                  <thead><tr><th><input type="checkbox" id="selectAllOrders"></th><th></th><th>Article</th><th>Prix</th><th>Client</th><th>Téléphone</th><th>Date</th><th>Statut</th><th>Livraison</th><th>Actions</th></tr></thead>
                   <tbody id="ordersTableBody"></tbody>
                 </table>
               </div>
@@ -525,7 +528,7 @@
 
   const CATEGORY_OPTIONS = ['Mode & Vêtements','Chaussures','Sacs & Maroquinerie','Bijoux & Accessoires',
     'Beauté & Cosmétiques','Électronique & Téléphonie','Maison & Décoration','Cuisine & Électroménager',
-    'Meubles','Bébé & Enfants','Sport & Loisirs','Fournitures & équipements scolaires','Autres'];
+    'Meubles','Bébé & Enfants','Sport & Loisirs','Fournitures & équipements scolaires','Quincaillerie','Mercerie','Autres'];
 
   function escapeHtml(s){
     return String(s||'').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -551,6 +554,7 @@
       margin:Number(r.margin)||0, agentId:r.agent_id, agentName:r.agent_name, commissionPct:Number(r.commission_pct)||0,
       commission:Number(r.commission)||0, buyerName:r.buyer_name||'', buyerPhone:r.buyer_phone||'', status:r.status,
       manual:r.manual, soldAt:r.sold_at, cancelledAt:r.cancelled_at,
+      fulfillmentStatus: r.fulfillment_status || 'pending',
       deliveryAddress: r.delivery_address || '',
       deliveryLat: r.delivery_lat !== undefined && r.delivery_lat !== null ? Number(r.delivery_lat) : null,
       deliveryLng: r.delivery_lng !== undefined && r.delivery_lng !== null ? Number(r.delivery_lng) : null
@@ -1140,6 +1144,7 @@
             agentId: art.agentId, agentName: agent ? agent.name : null,
             commissionPct: agent ? agent.commissionPct : 0, commission: currentCommissionPerUnit(art),
             buyerName: 'Vente enregistrée par l\'admin', buyerPhone: '', status: 'valid', manual: true,
+            fulfillmentStatus: 'pending',
             soldAt: new Date().toISOString()
           });
           renderArticlesTable(); renderDashboard(); renderOrders();
@@ -1385,30 +1390,43 @@
       list = list.filter(o =>
         (o.articleName||'').toLowerCase().includes(searchVal) ||
         (o.buyerName||'').toLowerCase().includes(searchVal) ||
-        (o.buyerPhone||'').toLowerCase().includes(searchVal)
+        (o.buyerPhone||'').toLowerCase().includes(searchVal) ||
+        (o.deliveryAddress||'').toLowerCase().includes(searchVal)
       );
     }
     if(list.length === 0){
-      tbody.innerHTML = `<tr><td colspan="9" style="color:var(--muted); text-align:center; padding:24px;">Aucune commande.</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="10" style="color:var(--muted); text-align:center; padding:24px;">Aucune commande.</td></tr>`;
       updateOrderSelectionUI();
       return;
     }
     tbody.innerHTML = list.map(o => {
       const cancelled = o.status === 'cancelled';
+      const fs = o.fulfillmentStatus || 'pending';
+      const fsTag = fs === 'delivered' ? '<span class="tag stock">✅ Livré</span>'
+        : fs === 'processing' ? '<span class="tag processing">📦 Traité</span>'
+        : '<span class="tag sold">🕓 En attente</span>';
+      let fsAction = '';
+      if(!cancelled){
+        if(fs === 'pending') fsAction = `<button class="small-btn" data-act="setProcessing" data-id="${o.id}">Marquer traité</button>`;
+        else if(fs === 'processing') fsAction = `<button class="small-btn success" data-act="setDelivered" data-id="${o.id}">Marquer livré</button> <button class="small-btn" data-act="setPending" data-id="${o.id}">↩ Remettre en attente</button>`;
+        else if(fs === 'delivered') fsAction = `<button class="small-btn" data-act="setProcessing" data-id="${o.id}">↩ Remettre en traité</button>`;
+      }
       return `
       <tr${cancelled ? ' style="opacity:0.55;"' : ''}>
         <td><input type="checkbox" class="order-select" data-id="${o.id}" ${selectedOrderIds.has(o.id)?'checked':''}></td>
         <td>${o.photo ? `<img class="thumb" src="${o.photo}">` : ''}</td>
         <td>${escapeHtml(o.articleName)}</td>
         <td>${FCFA(o.price)}</td>
-        <td>${escapeHtml(o.buyerName || '—')}</td>
+        <td>${escapeHtml(o.buyerName || '—')}${o.deliveryAddress ? `<br><span class="note" style="margin:0;">📍 ${escapeHtml(o.deliveryAddress)}</span>` : ''}</td>
         <td>${escapeHtml(o.buyerPhone || '—')}</td>
         <td>${o.soldAt ? new Date(o.soldAt).toLocaleDateString('fr-FR', {day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit'}) : '—'}</td>
         <td><span class="tag ${cancelled ? 'sold' : 'stock'}">${cancelled ? 'Annulée' : 'Valide'}</span></td>
+        <td>${fsTag}</td>
         <td>
           ${cancelled
             ? `<button class="small-btn success" data-act="reactivate" data-id="${o.id}">Réactiver</button>`
             : `<button class="small-btn danger" data-act="cancel" data-id="${o.id}">Annuler</button>`}
+          ${fsAction}
         </td>
       </tr>`;
     }).join('');
@@ -1425,6 +1443,14 @@
           if(confirm('Annuler cette commande et remettre l\'article en stock ?')) await cancelOrder(btn.dataset.id);
         }
         if(btn.dataset.act === 'reactivate') await reactivateOrder(btn.dataset.id);
+        if(['setPending','setProcessing','setDelivered'].includes(btn.dataset.act)){
+          const newStatus = btn.dataset.act === 'setPending' ? 'pending' : btn.dataset.act === 'setProcessing' ? 'processing' : 'delivered';
+          const { data, error } = await sb.rpc('admin_update_fulfillment', { p_pin: adminPin, p_order_id: btn.dataset.id, p_status: newStatus });
+          if(error){ alert('Erreur : ' + (error.message || 'connexion impossible, réessayez.')); return; }
+          const order = orders.find(o => o.id === btn.dataset.id);
+          if(order) order.fulfillmentStatus = data.fulfillment_status;
+          renderOrders();
+        }
       };
     });
   }
@@ -1704,8 +1730,6 @@
     if(!visitStats){ wrap.innerHTML = ''; return; }
     wrap.innerHTML = `
       <div class="stat-card"><div class="label">Visites totales</div><div class="value">${visitStats.total_visits}</div></div>
-      <div class="stat-card"><div class="label">Visiteurs uniques</div><div class="value">${visitStats.unique_visitors}</div></div>
-      <div class="stat-card"><div class="label">Visites aujourd'hui</div><div class="value">${visitStats.visits_today}</div></div>
     `;
   }
 
