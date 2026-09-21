@@ -229,6 +229,7 @@
           <div id="tab-dashboard" class="admin-tab-content">
             <div class="stat-grid" id="visitStatGrid"></div>
             <div class="stat-grid" id="statGrid"></div>
+            <p class="note" style="margin:-8px 0 20px;">Le chiffre d'affaires, la marge et les commissions ne comptent que les commandes marquées "Traité" ou "Livré" — pas celles encore "En attente".</p>
             <div class="panel">
               <h2>Ventes par catégorie</h2>
               <div id="dashCategoryList"></div>
@@ -340,6 +341,7 @@
               <button class="ghost-btn" id="refreshAgentStatsBtn">Actualiser mes stats</button>
             </div>
             <div class="stat-grid" id="agentDashStats"></div>
+            <p class="note" style="margin:-8px 0 20px;">Vos gains ne comptent que les ventes marquées "Traité" ou "Livré" par l'administrateur.</p>
             <div class="panel">
               <h2>Mes magasins</h2>
               <div id="agentDashStores"></div>
@@ -613,7 +615,7 @@
   function currentNetMarginPerUnit(article){ return article.margin - currentCommissionPerUnit(article); }
 
   function agentStats(agentId){
-    const mine = orders.filter(o => o.agentId === agentId && o.status !== 'cancelled');
+    const mine = orders.filter(o => o.agentId === agentId && o.status !== 'cancelled' && o.fulfillmentStatus !== 'pending');
     const totalDue = mine.reduce((s,o) => s + o.commission, 0);
     return { totalDue, soldCount: mine.length };
   }
@@ -1737,14 +1739,16 @@
     if(currentRole !== 'admin') return;
     const totalRemaining = articles.reduce((s,a) => s + a.remaining, 0);
     const productsAvailable = articles.filter(a => a.remaining > 0).length;
-    const validOrders = orders.filter(o => o.status !== 'cancelled');
+    const validOrders = orders.filter(o => o.status !== 'cancelled' && o.fulfillmentStatus !== 'pending');
     const unitsSold = validOrders.length;
     const revenue = validOrders.reduce((s,o) => s + o.price, 0);
     const totalMargin = validOrders.reduce((s,o) => s + o.margin, 0);
     const totalCommissions = validOrders.reduce((s,o) => s + o.commission, 0);
     const netProfit = totalMargin - totalCommissions;
 
+    const pendingCount = orders.filter(o => o.status !== 'cancelled' && o.fulfillmentStatus === 'pending').length;
     document.getElementById('statGrid').innerHTML = `
+      <div class="stat-card"><div class="label">🕓 Commandes en attente de traitement</div><div class="value">${pendingCount}</div></div>
       <div class="stat-card"><div class="label">Produits disponibles</div><div class="value">${productsAvailable}</div></div>
       <div class="stat-card"><div class="label">Unités en stock</div><div class="value">${totalRemaining}</div></div>
       <div class="stat-card"><div class="label">Unités vendues</div><div class="value">${unitsSold}</div></div>
