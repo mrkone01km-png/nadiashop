@@ -799,7 +799,6 @@
         <div class="product-body">
           <h3>${escapeHtml(a.name)}</h3>
           ${a.characteristics ? `<div class="note" style="margin:0;">${escapeHtml(a.characteristics)}</div>` : ''}
-          <div class="delivery-note">Livraison incluse</div>
           <div class="stock-note">${a.remaining <= 3 ? `Plus que ${a.remaining} en stock !` : `${a.remaining} en stock`}</div>
           <div class="price-row"><span class="price">${FCFA(a.final)}</span></div>
           <button class="buy-btn" data-id="${a.id}">Commander</button>
