@@ -369,6 +369,7 @@
                 <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
                   <input type="text" id="articleSearch" placeholder="Rechercher…" style="max-width:180px;">
                   <button class="small-btn danger hidden" id="deleteSelectedArticlesBtn">Supprimer la sélection (0)</button>
+                  <button class="small-btn" id="exportArticlesBtn">⬇️ Exporter CSV</button>
                   <button class="small-btn danger" id="clearArticlesBtn">Vider tous les articles</button>
                 </div>
               </div>
@@ -401,6 +402,7 @@
                 <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
                   <input type="text" id="orderSearch" placeholder="Rechercher…" style="max-width:180px;">
                   <button class="small-btn danger hidden" id="deleteSelectedOrdersBtn">Supprimer la sélection (0)</button>
+                  <button class="small-btn" id="exportOrdersBtn">⬇️ Exporter CSV</button>
                   <button class="small-btn danger" id="clearOrdersBtn">Vider toutes les commandes</button>
                 </div>
               </div>
@@ -463,6 +465,7 @@
                 <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
                   <input type="text" id="agentSearch" placeholder="Rechercher…" style="max-width:160px; font-family:var(--font-body); font-weight:400;">
                   <button class="small-btn danger hidden" id="deleteSelectedAgentsBtn" style="font-family:var(--font-body); font-weight:600;">Supprimer la sélection (0)</button>
+                  <button class="small-btn" id="exportAgentsBtn" style="font-family:var(--font-body); font-weight:600;">⬇️ Exporter CSV</button>
                   <button class="small-btn danger" id="clearAgentsBtn" style="font-family:var(--font-body); font-weight:600;">Vider tous les agents</button>
                 </div>
               </h2>
@@ -1316,6 +1319,122 @@
     };
   }
 
+  // ---------- EXPORT CSV ----------
+  function dateStamp(){ return new Date().toISOString().slice(0,10); }
+  function downloadCsv(filename, headers, rows){
+    const esc = (v) => {
+      if(v === null || v === undefined) return '';
+      const s = String(v).replace(/"/g, '""');
+      return /[",\n]/.test(s) ? `"${s}"` : s;
+    };
+    const lines = [headers.map(esc).join(',')];
+    rows.forEach(r => lines.push(r.map(esc).join(',')));
+    const csv = '\uFEFF' + lines.join('\r\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = filename;
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }
+  document.getElementById('exportArticlesBtn').onclick = () => {
+    const headers = ['ID','Catégorie','Nom','Caractéristiques','Magasin','Gérant/Contact','Prix magasin','Type marge','Valeur marge','Marge','Livraison','Prix vente','Agent','Quantité','Restant','Vendus','Créé le'];
+    const rows = articles.map(a => {
+      const agent = a.agentId ? agentById(a.agentId) : null;
+      return [a.id,a.category,a.name,a.characteristics,a.storeName,a.managerContact,a.storePrice,a.marginType,a.marginVal,a.margin,a.delivery,a.final,agent?agent.name:'',a.quantity,a.remaining,a.quantity-a.remaining,a.createdAt];
+    });
+    downloadCsv(`nadiashop-articles-${dateStamp()}.csv`, headers, rows);
+  };
+  document.getElementById('exportOrdersBtn').onclick = () => {
+    const headers = ['ID','Article','Catégorie','Prix','Client','Téléphone','Lieu de livraison','Statut','Traitement','Agent','Commission','Vente manuelle','Date'];
+    const rows = orders.map(o => [o.id,o.articleName,o.category,o.price,o.buyerName,o.buyerPhone,o.deliveryAddress,o.status,o.fulfillmentStatus,o.agentName,o.commission,o.manual?'Oui':'Non',o.soldAt]);
+    downloadCsv(`nadiashop-commandes-${dateStamp()}.csv`, headers, rows);
+  };
+  document.getElementById('exportAgentsBtn').onclick = () => {
+    const headers = ['ID','Nom','Téléphone','Commission %','Payé','Code','Nb ventes traitées'];
+    const rows = agents.map(a => { const s = agentStats(a.id); return [a.id,a.name,a.phone,a.commissionPct,a.paidOut,a.code,s.soldCount]; });
+    downloadCsv(`nadiashop-agents-${dateStamp()}.csv`, headers, rows);
+  };
+
+  // ---------- FACTURE (impression / PDF) ----------
+  function generateInvoiceHtml(order){
+    const ref = 'FA-' + order.id.slice(0,8).toUpperCase();
+    const dateStr = order.soldAt ? new Date(order.soldAt).toLocaleDateString('fr-FR', {day:'2-digit', month:'long', year:'numeric'}) : '';
+    return `<!DOCTYPE html>
+<html lang="fr"><head><meta charset="UTF-8"><title>Facture ${ref}</title><style>
+  body{font-family: Georgia, 'Times New Roman', serif; color:#20201C; max-width:700px; margin:40px auto; padding:0 20px;}
+  .top{display:flex; justify-content:space-between; align-items:flex-start; border-bottom:3px solid #1F2D50; padding-bottom:16px; margin-bottom:24px;}
+  .shop-name{font-size:26px; font-weight:700; color:#1F2D50;}
+  .shop-tag{font-size:12px; color:#B5482B; font-style:italic;}
+  .invoice-title{text-align:right;}
+  .invoice-title h2{margin:0; font-size:20px; color:#1F2D50;}
+  .invoice-title p{margin:2px 0; font-size:13px; color:#666;}
+  .info-block{display:flex; justify-content:space-between; margin-bottom:24px; font-size:14px;}
+  table{width:100%; border-collapse:collapse; margin-bottom:24px;}
+  th,td{text-align:left; padding:10px; border-bottom:1px solid #ddd;}
+  th{background:#EFEBE3; font-size:12px; text-transform:uppercase; letter-spacing:0.5px;}
+  .total-row td{font-weight:700; font-size:16px; border-top:2px solid #1F2D50; border-bottom:none;}
+  .footer{display:flex; justify-content:space-between; align-items:flex-end; margin-top:60px;}
+  .signature-box{text-align:center; width:220px;}
+  .signature-line{border-top:1px solid #999; margin-top:50px; padding-top:6px; font-size:12px; color:#666;}
+  .stamp{width:150px; height:150px; border-radius:50%; border:3px double #1F2D50; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; transform:rotate(-9deg); color:#1F2D50; padding:10px; box-sizing:border-box;}
+  .stamp .brand{font-weight:700; font-size:14px; letter-spacing:0.5px;}
+  .stamp .slogan{font-style:italic; font-size:9.5px; margin:5px 2px; color:#B5482B;}
+  .stamp .contacts{font-size:9px; margin-top:4px; line-height:1.4;}
+  .print-btn{position:fixed; top:16px; right:16px; background:#1F2D50; color:#fff; border:none; padding:10px 18px; border-radius:999px; font-family:'IBM Plex Sans',sans-serif; font-size:13px; cursor:pointer;}
+  @media print{ .print-btn{display:none;} body{margin:0; padding:20px;} }
+</style></head><body>
+  <button class="print-btn" onclick="window.print()">🖨️ Imprimer / Télécharger en PDF</button>
+  <div class="top">
+    <div>
+      <div class="shop-name">Nadia boutique en ligne</div>
+      <div class="shop-tag">La confiance livrée à votre porte</div>
+    </div>
+    <div class="invoice-title">
+      <h2>FACTURE</h2>
+      <p>N° ${ref}</p>
+      <p>${dateStr}</p>
+    </div>
+  </div>
+  <div class="info-block">
+    <div>
+      <strong>Client</strong><br>
+      ${escapeHtml(order.buyerName || '—')}<br>
+      ${escapeHtml(order.buyerPhone || '')}<br>
+      ${order.deliveryAddress ? escapeHtml(order.deliveryAddress) : ''}
+    </div>
+    <div style="text-align:right;">
+      <strong>Statut</strong><br>
+      ${order.fulfillmentStatus === 'delivered' ? 'Livré' : 'Traité'}
+    </div>
+  </div>
+  <table>
+    <thead><tr><th>Article</th><th>Détail</th><th style="text-align:right;">Prix</th></tr></thead>
+    <tbody>
+      <tr><td>${escapeHtml(order.articleName)}</td><td>${escapeHtml(order.category||'')}</td><td style="text-align:right;">${FCFA(order.price)}</td></tr>
+      <tr class="total-row"><td colspan="2">Total</td><td style="text-align:right;">${FCFA(order.price)}</td></tr>
+    </tbody>
+  </table>
+  <div class="footer">
+    <div class="signature-box">
+      <div class="signature-line">Signature du client</div>
+    </div>
+    <div class="stamp">
+      <div class="brand">NADIA BOUTIQUE</div>
+      <div class="slogan">"La confiance livrée<br>à votre porte"</div>
+      <div class="contacts">05 74 00 31 03<br>07 79 57 01 84</div>
+    </div>
+  </div>
+</body></html>`;
+  }
+  function printInvoice(orderId){
+    const order = orders.find(o => o.id === orderId);
+    if(!order) return;
+    const blob = new Blob([generateInvoiceHtml(order)], { type: 'text/html' });
+    const url = URL.createObjectURL(blob);
+    window.open(url, '_blank');
+  }
+
   // ---------- COMMANDES ----------
   let orderFilter = 'all';
   document.querySelectorAll('.order-filter').forEach(btn => {
@@ -1428,6 +1547,7 @@
             ? `<button class="small-btn success" data-act="reactivate" data-id="${o.id}">Réactiver</button>`
             : `<button class="small-btn danger" data-act="cancel" data-id="${o.id}">Annuler</button>`}
           ${fsAction}
+          ${(!cancelled && fs !== 'pending') ? `<button class="small-btn" data-act="invoice" data-id="${o.id}">🧾 Facture</button>` : ''}
         </td>
       </tr>`;
     }).join('');
@@ -1444,6 +1564,7 @@
           if(confirm('Annuler cette commande et remettre l\'article en stock ?')) await cancelOrder(btn.dataset.id);
         }
         if(btn.dataset.act === 'reactivate') await reactivateOrder(btn.dataset.id);
+        if(btn.dataset.act === 'invoice') printInvoice(btn.dataset.id);
         if(['setPending','setProcessing','setDelivered'].includes(btn.dataset.act)){
           const newStatus = btn.dataset.act === 'setPending' ? 'pending' : btn.dataset.act === 'setProcessing' ? 'processing' : 'delivered';
           const { data, error } = await sb.rpc('admin_update_fulfillment', { p_pin: adminPin, p_order_id: btn.dataset.id, p_status: newStatus });
