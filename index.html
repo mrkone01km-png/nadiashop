@@ -403,6 +403,7 @@
                 </div>
                 <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
                   <input type="text" id="orderSearch" placeholder="Rechercher…" style="max-width:180px;">
+                  <button class="small-btn hidden" id="printSelectedInvoiceBtn">🧾 Facture groupée (0)</button>
                   <button class="small-btn danger hidden" id="deleteSelectedOrdersBtn">Supprimer la sélection (0)</button>
                   <button class="small-btn" id="exportOrdersBtn">⬇️ CSV</button>
                   <button class="small-btn" id="exportOrdersXlsxBtn">⬇️ Excel</button>
@@ -504,7 +505,7 @@
               <div class="form-grid">
                 <div class="field">
                   <label>Nouveau code d'accès admin</label>
-                  <input type="text" id="newPin" placeholder="0000">
+                  <input type="text" id="newPin" placeholder="00000">
                 </div>
                 <div class="full">
                   <button class="ghost-btn" id="savePinBtn">Mettre à jour le code</button>
@@ -1377,9 +1378,32 @@
   document.getElementById('exportAgentsXlsxBtn').onclick = () => { const {headers,rows} = buildAgentsExport(); downloadXlsx(`nadiashop-agents-${dateStamp()}.xlsx`, 'Agents', headers, rows); };
 
   // ---------- FACTURE (impression / PDF) ----------
-  function generateInvoiceHtml(order){
-    const ref = 'FA-' + order.id.slice(0,8).toUpperCase();
-    const dateStr = order.soldAt ? new Date(order.soldAt).toLocaleDateString('fr-FR', {day:'2-digit', month:'long', year:'numeric'}) : '';
+  function generateInvoiceHtml(ordersArr){
+    const isGrouped = ordersArr.length > 1;
+    const first = ordersArr[0];
+    const sameClient = ordersArr.every(o => o.buyerName === first.buyerName && o.buyerPhone === first.buyerPhone);
+    const ref = isGrouped ? ('FA-' + Date.now().toString(36).toUpperCase()) : ('FA-' + first.id.slice(0,8).toUpperCase());
+    const dateStr = new Date().toLocaleDateString('fr-FR', {day:'2-digit', month:'long', year:'numeric'});
+    const total = ordersArr.reduce((s,o) => s + o.price, 0);
+    const allDelivered = ordersArr.every(o => o.fulfillmentStatus === 'delivered');
+    const clientBlockHtml = sameClient ? `
+      <strong>Client</strong><br>
+      ${escapeHtml(first.buyerName || '—')}<br>
+      ${escapeHtml(first.buyerPhone || '')}<br>
+      ${first.deliveryAddress ? escapeHtml(first.deliveryAddress) : ''}
+    ` : `
+      <strong>Facture groupée</strong><br>
+      ${ordersArr.length} commandes, plusieurs clients
+    `;
+    const rows = ordersArr.map(o => `
+      <tr>
+        ${sameClient ? '' : `<td>${escapeHtml(o.buyerName || '—')}</td>`}
+        <td>${escapeHtml(o.articleName)}</td>
+        <td>${escapeHtml(o.category||'')}</td>
+        <td style="text-align:right;">${FCFA(o.price)}</td>
+      </tr>`).join('');
+    const colHeaders = (sameClient ? '' : '<th>Client</th>') + '<th>Article</th><th>Détail</th><th style="text-align:right;">Prix</th>';
+    const totalColspan = sameClient ? 2 : 3;
     return `<!DOCTYPE html>
 <html lang="fr"><head><meta charset="UTF-8"><title>Facture ${ref}</title><style>
   body{font-family: Georgia, 'Times New Roman', serif; color:#20201C; max-width:700px; margin:40px auto; padding:0 20px;}
@@ -1415,22 +1439,17 @@
     </div>
   </div>
   <div class="info-block">
-    <div>
-      <strong>Client</strong><br>
-      ${escapeHtml(order.buyerName || '—')}<br>
-      ${escapeHtml(order.buyerPhone || '')}<br>
-      ${order.deliveryAddress ? escapeHtml(order.deliveryAddress) : ''}
-    </div>
+    <div>${clientBlockHtml}</div>
     <div style="text-align:right;">
       <strong>Statut</strong><br>
-      ${order.fulfillmentStatus === 'delivered' ? 'Livré' : 'Traité'}
+      ${allDelivered ? 'Livré' : 'Traité'}
     </div>
   </div>
   <table>
-    <thead><tr><th>Article</th><th>Détail</th><th style="text-align:right;">Prix</th></tr></thead>
+    <thead><tr>${colHeaders}</tr></thead>
     <tbody>
-      <tr><td>${escapeHtml(order.articleName)}</td><td>${escapeHtml(order.category||'')}</td><td style="text-align:right;">${FCFA(order.price)}</td></tr>
-      <tr class="total-row"><td colspan="2">Total</td><td style="text-align:right;">${FCFA(order.price)}</td></tr>
+      ${rows}
+      <tr class="total-row"><td colspan="${totalColspan}">Total</td><td style="text-align:right;">${FCFA(total)}</td></tr>
     </tbody>
   </table>
   <div class="footer">
@@ -1442,29 +1461,30 @@
     </div>
     <div class="stamp">
       <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
-        <circle cx="100" cy="100" r="95" fill="none" stroke="#1F2D50" stroke-width="2.5"/>
-        <circle cx="100" cy="100" r="86" fill="none" stroke="#1F2D50" stroke-width="1"/>
-        <path id="stampTopArc" d="M 22,100 A 78,78 0 0 1 178,100" fill="none"/>
-        <path id="stampBottomArc" d="M 178,100 A 78,78 0 0 1 22,100" fill="none"/>
-        <text font-family="Georgia, 'Times New Roman', serif" font-size="16" font-weight="700" fill="#1F2D50" letter-spacing="2">
+        <circle cx="100" cy="100" r="94" fill="none" stroke="#1F2D50" stroke-width="2.5"/>
+        <circle cx="100" cy="100" r="66" fill="none" stroke="#1F2D50" stroke-width="1"/>
+        <path id="stampTopArc" d="M 19,100 A 81,81 0 0 1 181,100" fill="none"/>
+        <path id="stampBottomArc" d="M 181,100 A 81,81 0 0 1 19,100" fill="none"/>
+        <text font-family="Georgia, 'Times New Roman', serif" font-size="13" font-weight="700" fill="#1F2D50" letter-spacing="1.5">
           <textPath href="#stampTopArc" xlink:href="#stampTopArc" startOffset="50%" text-anchor="middle">NADIA BOUTIQUE</textPath>
         </text>
-        <text font-family="Georgia, 'Times New Roman', serif" font-size="8.5" font-style="italic" fill="#B5482B" letter-spacing="0.5">
+        <text font-family="Georgia, 'Times New Roman', serif" font-size="7.5" font-style="italic" fill="#B5482B" letter-spacing="0.3">
           <textPath href="#stampBottomArc" xlink:href="#stampBottomArc" startOffset="50%" text-anchor="middle">LA CONFIANCE LIVRÉE À VOTRE PORTE</textPath>
         </text>
         <g transform="rotate(-20 100 100)">
-          <text x="100" y="95" font-family="Georgia, 'Times New Roman', serif" font-size="12" font-weight="700" fill="#1F2D50" text-anchor="middle">05 74 00 31 03</text>
-          <text x="100" y="113" font-family="Georgia, 'Times New Roman', serif" font-size="12" font-weight="700" fill="#1F2D50" text-anchor="middle">07 79 57 01 84</text>
+          <text x="100" y="95" font-family="Georgia, 'Times New Roman', serif" font-size="11" font-weight="700" fill="#1F2D50" text-anchor="middle">05 74 00 31 03</text>
+          <text x="100" y="112" font-family="Georgia, 'Times New Roman', serif" font-size="11" font-weight="700" fill="#1F2D50" text-anchor="middle">07 79 57 01 84</text>
         </g>
       </svg>
     </div>
   </div>
 </body></html>`;
   }
-  function printInvoice(orderId){
-    const order = orders.find(o => o.id === orderId);
-    if(!order) return;
-    const blob = new Blob([generateInvoiceHtml(order)], { type: 'text/html' });
+  function printInvoice(orderIdOrIds){
+    const ids = Array.isArray(orderIdOrIds) ? orderIdOrIds : [orderIdOrIds];
+    const ordersArr = ids.map(id => orders.find(o => o.id === id)).filter(Boolean);
+    if(ordersArr.length === 0) return;
+    const blob = new Blob([generateInvoiceHtml(ordersArr)], { type: 'text/html' });
     const url = URL.createObjectURL(blob);
     window.open(url, '_blank');
   }
@@ -1485,7 +1505,17 @@
     const btn = document.getElementById('deleteSelectedOrdersBtn');
     btn.textContent = `Supprimer la sélection (${selectedOrderIds.size})`;
     btn.classList.toggle('hidden', selectedOrderIds.size === 0);
+    const invBtn = document.getElementById('printSelectedInvoiceBtn');
+    invBtn.textContent = `🧾 Facture groupée (${selectedOrderIds.size})`;
+    invBtn.classList.toggle('hidden', selectedOrderIds.size < 2);
   }
+  document.getElementById('printSelectedInvoiceBtn').onclick = () => {
+    const selected = orders.filter(o => selectedOrderIds.has(o.id));
+    const eligible = selected.filter(o => o.status !== 'cancelled' && o.fulfillmentStatus !== 'pending');
+    if(eligible.length === 0){ alert('Sélectionnez au moins une commande traitée ou livrée pour générer une facture.'); return; }
+    if(eligible.length < selected.length){ alert(`${selected.length - eligible.length} commande(s) ignorée(s) car annulée(s) ou pas encore traitée(s).`); }
+    printInvoice(eligible.map(o => o.id));
+  };
   document.getElementById('selectAllOrders').onchange = (e) => {
     const checked = e.target.checked;
     document.querySelectorAll('.order-select').forEach(cb => {
