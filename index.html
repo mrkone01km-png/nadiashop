@@ -856,17 +856,7 @@
         </div>
       </div>`;
     document.getElementById('locateDeliveryBtn').onclick = () => {
-      const statusEl = document.getElementById('deliveryLocateStatus');
-      if(!navigator.geolocation){ statusEl.textContent = 'Géolocalisation non disponible sur cet appareil.'; return; }
-      statusEl.textContent = 'Recherche de la position…';
-      navigator.geolocation.getCurrentPosition(
-        (pos) => {
-          deliveryLat = pos.coords.latitude; deliveryLng = pos.coords.longitude;
-          statusEl.textContent = '✓ Position ajoutée';
-        },
-        () => { statusEl.textContent = 'Position refusée ou indisponible.'; },
-        { enableHighAccuracy: true, timeout: 10000 }
-      );
+      locateMe(document.getElementById('deliveryLocateStatus'), (lat,lng) => { deliveryLat = lat; deliveryLng = lng; });
     };
     document.getElementById('cancelOrd').onclick = () => root.innerHTML = '';
     document.getElementById('modalBg').onclick = (e) => { if(e.target.id === 'modalBg') root.innerHTML = ''; };
@@ -896,6 +886,29 @@
         </div>`;
       document.getElementById('closeOrd').onclick = () => { root.innerHTML=''; renderMarket(); };
     };
+  }
+
+  function locateMe(statusEl, onSuccess){
+    if(!navigator.geolocation){ statusEl.textContent = 'Géolocalisation non disponible sur cet appareil.'; return; }
+    statusEl.textContent = 'Recherche de la position…';
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        onSuccess(pos.coords.latitude, pos.coords.longitude);
+        statusEl.textContent = '✓ Position enregistrée';
+      },
+      () => {
+        statusEl.textContent = 'Nouvelle tentative…';
+        navigator.geolocation.getCurrentPosition(
+          (pos) => {
+            onSuccess(pos.coords.latitude, pos.coords.longitude);
+            statusEl.textContent = '✓ Position enregistrée';
+          },
+          () => { statusEl.textContent = 'Position indisponible — vérifiez que la localisation est activée sur votre appareil, puis réessayez.'; },
+          { enableHighAccuracy: false, timeout: 20000, maximumAge: 60000 }
+        );
+      },
+      { enableHighAccuracy: true, timeout: 8000, maximumAge: 30000 }
+    );
   }
 
   // ---------- ADD ARTICLE ----------
@@ -929,17 +942,7 @@
 
   let storeLat = null, storeLng = null;
   document.getElementById('locateStoreBtn').onclick = () => {
-    const statusEl = document.getElementById('storeLocateStatus');
-    if(!navigator.geolocation){ statusEl.textContent = 'Géolocalisation non disponible sur cet appareil.'; return; }
-    statusEl.textContent = 'Recherche de la position…';
-    navigator.geolocation.getCurrentPosition(
-      (pos) => {
-        storeLat = pos.coords.latitude; storeLng = pos.coords.longitude;
-        statusEl.textContent = '✓ Position enregistrée';
-      },
-      () => { statusEl.textContent = 'Position refusée ou indisponible.'; },
-      { enableHighAccuracy: true, timeout: 10000 }
-    );
+    locateMe(document.getElementById('storeLocateStatus'), (lat,lng) => { storeLat = lat; storeLng = lng; });
   };
 
   document.querySelectorAll('input[name=marginType]').forEach(r => r.onchange = () => {
@@ -1287,17 +1290,7 @@
     document.getElementById('editArtPhotoCamera').onchange = (e) => { addEditPhotos(e.target.files); e.target.value=''; };
 
     document.getElementById('editLocateStoreBtn').onclick = () => {
-      const statusEl = document.getElementById('editStoreLocateStatus');
-      if(!navigator.geolocation){ statusEl.textContent = 'Géolocalisation non disponible sur cet appareil.'; return; }
-      statusEl.textContent = 'Recherche de la position…';
-      navigator.geolocation.getCurrentPosition(
-        (pos) => {
-          editStoreLat = pos.coords.latitude; editStoreLng = pos.coords.longitude;
-          statusEl.textContent = '✓ Position mise à jour';
-        },
-        () => { statusEl.textContent = 'Position refusée ou indisponible.'; },
-        { enableHighAccuracy: true, timeout: 10000 }
-      );
+      locateMe(document.getElementById('editStoreLocateStatus'), (lat,lng) => { editStoreLat = lat; editStoreLng = lng; });
     };
 
     document.getElementById('cancelEditArt').onclick = () => root.innerHTML = '';
@@ -1393,7 +1386,7 @@
       ${first.deliveryAddress ? escapeHtml(first.deliveryAddress) : ''}
     ` : `
       <strong>Facture groupée</strong><br>
-      ${ordersArr.length} commandes, plusieurs clients
+      ${ordersArr.length} commandes
     `;
     const rows = ordersArr.map(o => `
       <tr>
@@ -1456,10 +1449,11 @@
     <div class="signature-box">
       <div class="signature-line">Signature du client</div>
     </div>
-    <div class="signature-box">
-      <div class="signature-line">Signature du gérant</div>
-    </div>
-    <div class="stamp">
+    <div style="display:flex; align-items:flex-end; gap:10px;">
+      <div class="signature-box" style="width:130px;">
+        <div class="signature-line">Signature du gérant</div>
+      </div>
+      <div class="stamp">
       <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
         <circle cx="100" cy="100" r="94" fill="none" stroke="#1F2D50" stroke-width="2.5"/>
         <circle cx="100" cy="100" r="66" fill="none" stroke="#1F2D50" stroke-width="1"/>
@@ -1476,6 +1470,7 @@
           <text x="100" y="112" font-family="Georgia, 'Times New Roman', serif" font-size="11" font-weight="700" fill="#1F2D50" text-anchor="middle">07 79 57 01 84</text>
         </g>
       </svg>
+    </div>
     </div>
   </div>
 </body></html>`;
