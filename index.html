@@ -565,6 +565,7 @@
       commission:Number(r.commission)||0, buyerName:r.buyer_name||'', buyerPhone:r.buyer_phone||'', status:r.status,
       manual:r.manual, soldAt:r.sold_at, cancelledAt:r.cancelled_at,
       fulfillmentStatus: r.fulfillment_status || 'pending',
+      quantity: r.quantity || 1,
       deliveryAddress: r.delivery_address || '',
       deliveryLat: r.delivery_lat !== undefined && r.delivery_lat !== null ? Number(r.delivery_lat) : null,
       deliveryLng: r.delivery_lng !== undefined && r.delivery_lng !== null ? Number(r.delivery_lng) : null
@@ -838,7 +839,9 @@
       <div class="modal-bg" id="modalBg">
         <div class="modal">
           <h3>Confirmer la commande</h3>
-          <p>${escapeHtml(article.name)} — ${FCFA(article.final)}</p>
+          <p>${escapeHtml(article.name)} — ${FCFA(article.final)} / unité</p>
+          <div class="field"><label>Quantité (stock disponible : ${article.remaining})</label><input type="number" id="ordQuantity" min="1" max="${article.remaining}" value="1"></div>
+          <p class="note" id="ordTotalNote" style="margin:0 0 12px;">Total : ${FCFA(article.final)}</p>
           <div class="field"><label>Nom du client</label><input type="text" id="ordName" placeholder="Votre nom"></div>
           <div class="field"><label>Téléphone</label><input type="tel" id="ordPhone" placeholder="Votre numéro"></div>
           <div class="field">
@@ -855,6 +858,11 @@
           </div>
         </div>
       </div>`;
+    document.getElementById('ordQuantity').addEventListener('input', (e) => {
+      let q = Math.max(1, Math.min(article.remaining, Number(e.target.value)||1));
+      e.target.value = q;
+      document.getElementById('ordTotalNote').textContent = `Total : ${FCFA(article.final * q)}`;
+    });
     document.getElementById('locateDeliveryBtn').onclick = () => {
       locateMe(document.getElementById('deliveryLocateStatus'), (lat,lng) => { deliveryLat = lat; deliveryLng = lng; });
     };
@@ -865,14 +873,18 @@
       const buyerName = document.getElementById('ordName').value.trim();
       const buyerPhone = document.getElementById('ordPhone').value.trim();
       const deliveryAddress = document.getElementById('ordAddress').value.trim();
+      const quantity = Math.max(1, Math.min(article.remaining, Number(document.getElementById('ordQuantity').value)||1));
       if(!deliveryAddress){ alert('Merci d\'indiquer le lieu de livraison souhaité.'); confirmBtn.disabled = false; return; }
       const { data, error } = await sb.rpc('place_order_public', {
         p_article_id: article.id, p_buyer_name: buyerName, p_buyer_phone: buyerPhone,
-        p_delivery_address: deliveryAddress, p_delivery_lat: deliveryLat, p_delivery_lng: deliveryLng
+        p_delivery_address: deliveryAddress, p_delivery_lat: deliveryLat, p_delivery_lng: deliveryLng,
+        p_quantity: quantity
       });
       if(error || !data || !data.ok){
+        alert(article.remaining > 0
+          ? `Stock insuffisant : il ne reste que ${article.remaining} en stock pour cet article. Réduisez la quantité et réessayez.`
+          : 'Désolé, cet article vient d\'être épuisé.');
         root.innerHTML=''; renderMarket();
-        alert('Désolé, cet article vient d\'être épuisé.');
         return;
       }
       article.remaining = data.remaining;
@@ -1156,7 +1168,7 @@
             agentId: art.agentId, agentName: agent ? agent.name : null,
             commissionPct: agent ? agent.commissionPct : 0, commission: currentCommissionPerUnit(art),
             buyerName: 'Vente enregistrée par l\'admin', buyerPhone: '', status: 'valid', manual: true,
-            fulfillmentStatus: 'pending',
+            fulfillmentStatus: 'pending', quantity: 1,
             soldAt: new Date().toISOString()
           });
           renderArticlesTable(); renderDashboard(); renderOrders();
@@ -1329,8 +1341,8 @@
     return { headers, rows };
   }
   function buildOrdersExport(){
-    const headers = ['ID','Article','Catégorie','Prix','Client','Téléphone','Lieu de livraison','Statut','Traitement','Agent','Commission','Vente manuelle','Date'];
-    const rows = orders.map(o => [o.id,o.articleName,o.category,o.price,o.buyerName,o.buyerPhone,o.deliveryAddress,o.status,o.fulfillmentStatus,o.agentName,o.commission,o.manual?'Oui':'Non',o.soldAt]);
+    const headers = ['ID','Article','Quantité','Catégorie','Prix','Client','Téléphone','Lieu de livraison','Statut','Traitement','Agent','Commission','Vente manuelle','Date'];
+    const rows = orders.map(o => [o.id,o.articleName,o.quantity,o.category,o.price,o.buyerName,o.buyerPhone,o.deliveryAddress,o.status,o.fulfillmentStatus,o.agentName,o.commission,o.manual?'Oui':'Non',o.soldAt]);
     return { headers, rows };
   }
   function buildAgentsExport(){
@@ -1391,7 +1403,7 @@
     const rows = ordersArr.map(o => `
       <tr>
         ${sameClient ? '' : `<td>${escapeHtml(o.buyerName || '—')}</td>`}
-        <td>${escapeHtml(o.articleName)}</td>
+        <td>${escapeHtml(o.articleName)}${o.quantity > 1 ? ` <span style="color:#888;">×${o.quantity}</span>` : ''}</td>
         <td>${escapeHtml(o.category||'')}</td>
         <td style="text-align:right;">${FCFA(o.price)}</td>
       </tr>`).join('');
@@ -1594,7 +1606,7 @@
       <tr${cancelled ? ' style="opacity:0.55;"' : ''}>
         <td><input type="checkbox" class="order-select" data-id="${o.id}" ${selectedOrderIds.has(o.id)?'checked':''}></td>
         <td>${o.photo ? `<img class="thumb" src="${o.photo}">` : ''}</td>
-        <td>${escapeHtml(o.articleName)}</td>
+        <td>${escapeHtml(o.articleName)}${o.quantity > 1 ? ` <span class="note" style="margin:0;">×${o.quantity}</span>` : ''}</td>
         <td>${FCFA(o.price)}</td>
         <td>${escapeHtml(o.buyerName || '—')}${o.deliveryAddress ? `<br><span class="note" style="margin:0;">📍 ${escapeHtml(o.deliveryAddress)}</span>` : ''}</td>
         <td>${escapeHtml(o.buyerPhone || '—')}</td>
@@ -1776,7 +1788,7 @@
       if(o.deliveryLat == null || o.deliveryLng == null) return;
       const marker = L.marker([o.deliveryLat, o.deliveryLng], { icon: deliveryIcon }).addTo(deliveryMarkersLayer);
       const dateStr = o.soldAt ? new Date(o.soldAt).toLocaleDateString('fr-FR') : '';
-      marker.bindPopup(`<strong>${escapeHtml(o.articleName)}</strong><br>${escapeHtml(o.buyerName||'Client')} — ${escapeHtml(o.buyerPhone||'')}<br>${escapeHtml(o.deliveryAddress||'')}<br><span style="color:#888;">${dateStr}</span>`);
+      marker.bindPopup(`<strong>${escapeHtml(o.articleName)}${o.quantity > 1 ? ' ×'+o.quantity : ''}</strong><br>${escapeHtml(o.buyerName||'Client')} — ${escapeHtml(o.buyerPhone||'')}<br>${escapeHtml(o.deliveryAddress||'')}<br><span style="color:#888;">${dateStr}</span>`);
       deliveryMarkersById[o.id] = marker;
       bounds.push([o.deliveryLat, o.deliveryLng]);
     });
